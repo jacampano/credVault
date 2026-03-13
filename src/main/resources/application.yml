@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: credvault
+  profiles:
+    default: local
+
+logging:
+  pattern:
+    level: "%5p [cid:%X{correlationId:-}]"
+
+app:
+  crypto:
+    key: ${APP_ENCRYPTION_KEY:}
+  auth:
+    mode: ${APP_AUTH_MODE:}
+    local-admin-username: ${APP_AUTH_LOCAL_ADMIN_USERNAME:}
+    local-admin-password: ${APP_AUTH_LOCAL_ADMIN_PASSWORD:}
+    oauth-client-id: ${APP_AUTH_OAUTH_CLIENT_ID:}
+    oauth-client-secret: ${APP_AUTH_OAUTH_CLIENT_SECRET:}
+    oauth-authorization-uri: ${APP_AUTH_OAUTH_AUTHORIZATION_URI:}
+    oauth-token-uri: ${APP_AUTH_OAUTH_TOKEN_URI:}
+    oauth-user-info-uri: ${APP_AUTH_OAUTH_USER_INFO_URI:}
+    oauth-user-name-attribute: ${APP_AUTH_OAUTH_USER_NAME_ATTRIBUTE:}
+    oauth-scopes: ${APP_AUTH_OAUTH_SCOPES:}
+    oauth-redirect-uri: ${APP_AUTH_OAUTH_REDIRECT_URI:}
+    oauth-admin-users: ${APP_AUTH_OAUTH_ADMIN_USERS:}

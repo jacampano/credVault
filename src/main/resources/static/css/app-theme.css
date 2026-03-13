@@ -1,0 +1,199 @@
+:root {
+    --app-bg: #f4f8f7;
+    --app-surface: #ffffff;
+    --app-surface-alt: #eef6f4;
+    --app-text: #16312d;
+    --app-muted: #5d7872;
+    --app-primary: #0e8f73;
+    --app-primary-strong: #0a6f59;
+    --app-accent: #ff8b3d;
+    --app-border: #d4e5e1;
+    --app-danger: #cf3244;
+    --app-radius: 18px;
+    --app-shadow: 0 16px 45px rgba(14, 65, 56, 0.12);
+}
+
+body.app-body {
+    background:
+        radial-gradient(circle at 10% -5%, rgba(14, 143, 115, 0.2), transparent 35%),
+        radial-gradient(circle at 90% 0%, rgba(255, 139, 61, 0.18), transparent 30%),
+        var(--app-bg);
+    color: var(--app-text);
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    min-height: 100vh;
+}
+
+.app-shell {
+    max-width: 1160px;
+}
+
+.app-title {
+    font-family: "DM Serif Display", serif;
+    letter-spacing: 0.3px;
+}
+
+.app-topbar {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(212, 229, 225, 0.95);
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(14, 65, 56, 0.08);
+    padding: 0.75rem 1.1rem;
+}
+
+.app-topbar .brand {
+    color: var(--app-text);
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 0.4px;
+}
+
+.app-topbar .user-link {
+    color: var(--app-text);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.app-topbar .icon-link {
+    align-items: center;
+    color: var(--app-primary-strong);
+    display: inline-flex;
+    font-size: 1.1rem;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.app-card {
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    box-shadow: var(--app-shadow);
+}
+
+.app-hero {
+    background: linear-gradient(135deg, rgba(14, 143, 115, 0.14), rgba(255, 139, 61, 0.14));
+    border: 1px solid rgba(14, 143, 115, 0.2);
+    border-radius: var(--app-radius);
+    padding: 1.25rem 1.3rem;
+}
+
+.app-subtitle {
+    color: var(--app-muted);
+    margin: 0;
+}
+
+.btn.btn-primary {
+    background-color: var(--app-primary);
+    border-color: var(--app-primary);
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.btn.btn-primary:hover,
+.btn.btn-primary:focus {
+    background-color: var(--app-primary-strong);
+    border-color: var(--app-primary-strong);
+}
+
+.btn.btn-outline-secondary,
+.btn.btn-outline-danger,
+.btn.btn-outline-primary {
+    border-radius: 12px;
+}
+
+.app-link {
+    color: var(--app-primary-strong);
+    text-decoration: none;
+}
+
+.app-link:hover {
+    color: var(--app-primary);
+}
+
+.app-table-wrap {
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    overflow: hidden;
+}
+
+table.app-table {
+    margin: 0;
+}
+
+table.app-table thead th {
+    background: var(--app-surface-alt);
+    border-bottom: 1px solid var(--app-border);
+    color: var(--app-muted);
+    font-size: 0.78rem;
+    letter-spacing: 0.45px;
+    text-transform: uppercase;
+}
+
+table.app-table tbody td {
+    border-color: #edf4f2;
+    vertical-align: middle;
+}
+
+.badge.bg-success {
+    background-color: #12896f !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6f8883 !important;
+}
+
+.form-control,
+.form-select,
+textarea.form-control {
+    background: #fcfffe;
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+    color: var(--app-text);
+}
+
+.form-control:focus,
+.form-select:focus,
+textarea.form-control:focus {
+    border-color: var(--app-primary);
+    box-shadow: 0 0 0 0.25rem rgba(14, 143, 115, 0.16);
+}
+
+.list-group-item {
+    border-color: var(--app-border);
+}
+
+@media (max-width: 768px) {
+    .app-topbar {
+        border-radius: 18px;
+    }
+
+    .app-topbar .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+
+    .app-topbar .topbar-actions {
+        width: 100%;
+    }
+}
+
+.login-layout {
+    align-items: center;
+    display: flex;
+    min-height: 100vh;
+}
+
+.login-card {
+    animation: riseIn 360ms ease-out;
+}
+
+@keyframes riseIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -1,0 +1,15 @@
+# Maven build output
+/target/
+
+# Local embedded DB (H2)
+/data/
+*.mv.db
+*.trace.db
+*.lock.db
+*.h2.db
+
+# OS / IDE noise
+.DS_Store
+.idea/
+*.iml
+.vscode/
