@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Historial de credencial</title>
+    <title>Gestión de Entornos | Administración</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
             <a class="brand" th:href="@{/credentials}">CredVault</a>
             <div class="topbar-actions d-flex align-items-center gap-3">
                 <a class="user-link" th:href="@{/profile}" sec:authentication="name"></a>
-                <a sec:authorize="hasRole('ADMIN')" class="icon-link" th:href="@{/admin}" title="Administración" aria-label="Administración">
+                <a class="icon-link" th:href="@{/admin}" title="Administración" aria-label="Administración">
                     <i class="bi bi-gear-fill"></i>
                 </a>
                 <form th:action="@{/logout}" method="post">
@@ -30,50 +30,47 @@
     </header>
 
     <section class="app-hero mb-4">
-        <h1 class="app-title h2 mb-1">Historial de modificaciones</h1>
-        <p class="app-subtitle">
-            Credencial:
-            <span class="fw-semibold" th:text="${credential.identifier}"></span>
-        </p>
-        <a class="app-link" th:href="@{/credentials}"><i class="bi bi-arrow-left-short"></i> Volver a credenciales</a>
+        <h1 class="app-title h2 mb-1">Gestión de Entornos</h1>
+        <p class="app-subtitle">Administra los entornos de despliegue y operación.</p>
     </section>
 
-    <div class="app-card app-table-wrap">
+    <div class="alert alert-success" th:if="${message}" th:text="${message}"></div>
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+    <div class="app-card app-table-wrap mb-3">
         <div class="table-responsive">
             <table class="table app-table align-middle">
                 <thead>
                 <tr>
-                    <th>Fecha</th>
-                    <th>Editado por</th>
-                    <th>Identificador</th>
-                    <th>Tipo</th>
-                    <th>Equipos</th>
-                    <th>Usuario Web</th>
-                    <th>URL</th>
-                    <th>Compartida</th>
+                    <th>Nombre entorno</th>
+                    <th>Identificador del entorno</th>
+                    <th>Descripción del entorno</th>
+                    <th class="text-end">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:if="${#lists.isEmpty(historyEntries)}">
-                    <td colspan="8" class="text-center py-4">No hay modificaciones registradas</td>
+                <tr th:if="${#lists.isEmpty(environments)}">
+                    <td colspan="4" class="text-center py-4">No hay entornos registrados</td>
                 </tr>
-                <tr th:each="entry : ${historyEntries}">
-                    <td th:text="${#temporals.format(entry.editedAt, 'dd/MM/yyyy HH:mm')}"></td>
-                    <td th:text="${entry.editedBy}"></td>
-                    <td th:text="${entry.identifier}"></td>
-                    <td th:text="${entry.type}"></td>
-                    <td th:text="${#strings.arrayJoin(entry.teams.toArray(), ', ')}"></td>
-                    <td th:text="${entry.webUsername}"></td>
-                    <td th:text="${entry.type.name() == 'TOKEN' ? entry.tokenUrl : entry.webUrl}"></td>
-                    <td>
-                        <span class="badge" th:classappend="${entry.shared} ? 'bg-success' : 'bg-secondary'"
-                              th:text="${entry.shared} ? 'SI' : 'NO'"></span>
+                <tr th:each="environment : ${environments}">
+                    <td class="fw-semibold" th:text="${environment.name}"></td>
+                    <td th:text="${environment.identifier}"></td>
+                    <td th:text="${environment.description}"></td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/environments/{id}/edit(id=${environment.id})}">Editar</a>
+                        <form class="d-inline" th:action="@{/admin/environments/{id}/delete(id=${environment.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+                        </form>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+    <a class="btn btn-primary" th:href="@{/admin/environments/new}">Nuevo entorno</a>
+    <a class="app-link d-inline-block mt-3 ms-3" th:href="@{/admin}"><i class="bi bi-arrow-left-short"></i> Volver a administración</a>
 </div>
 </body>
 </html>

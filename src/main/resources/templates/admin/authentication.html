@@ -54,8 +54,8 @@
             <div class="mb-3">
                 <label class="form-label">Modo de autenticación</label>
                 <select class="form-select" th:field="*{mode}" id="authMode">
-                    <option th:value="${T(com.example.credvault.security.AuthMode).local}">local</option>
-                    <option th:value="${T(com.example.credvault.security.AuthMode).oauth}">oauth</option>
+                    <option th:value="${T(io.github.jacampano.credvault.security.AuthMode).local}">local</option>
+                    <option th:value="${T(io.github.jacampano.credvault.security.AuthMode).oauth}">oauth</option>
                 </select>
                 <div class="text-danger small" th:errors="*{mode}"></div>
             </div>

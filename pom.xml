@@ -10,7 +10,7 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.example</groupId>
+    <groupId>io.github.jacampano</groupId>
     <artifactId>credvault</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>credvault</name>

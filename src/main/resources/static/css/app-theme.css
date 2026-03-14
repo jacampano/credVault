@@ -81,6 +81,113 @@ body.app-body {
     margin: 0;
 }
 
+.app-filters {
+    background: linear-gradient(155deg, #ffffff, #f6fbf9 75%);
+    padding: 1rem 1rem 1.1rem;
+}
+
+.app-filters-head {
+    border-bottom: 1px solid var(--app-border);
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.75rem;
+}
+
+.app-filters-head h2 {
+    color: var(--app-text);
+    font-family: "DM Serif Display", serif;
+    letter-spacing: 0.2px;
+}
+
+.app-filters-head p {
+    color: var(--app-muted);
+    font-size: 0.9rem;
+}
+
+.app-filters .form-label {
+    color: var(--app-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+}
+
+.app-filters .form-select[multiple] {
+    background-color: #fbfffe;
+    min-height: 7.4rem;
+    padding-top: 0.35rem;
+}
+
+.app-filters .form-select option {
+    border-radius: 8px;
+    margin: 2px 0;
+    padding: 0.34rem 0.55rem;
+}
+
+.app-filters .form-select option:checked {
+    background: linear-gradient(135deg, var(--app-primary), #2ba388);
+    color: #ffffff;
+}
+
+.app-filters-actions {
+    border-top: 1px solid var(--app-border);
+    margin-top: 0.2rem;
+    padding-top: 0.85rem;
+}
+
+.app-filters-panel {
+    animation: riseIn 220ms ease-out;
+}
+
+.calendar-grid {
+    display: grid;
+    gap: 0.45rem;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendar-weekday {
+    color: var(--app-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.35px;
+    padding: 0.25rem 0.1rem;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.calendar-day {
+    align-items: center;
+    background: #f8fcfb;
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    min-height: 56px;
+    padding: 0.55rem 0.6rem;
+}
+
+.calendar-day-out {
+    background: #f4f7f6;
+    color: #8ca19c;
+}
+
+.calendar-day-number {
+    font-weight: 600;
+}
+
+.calendar-dot {
+    background: #d92f3f;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(217, 47, 63, 0.15);
+    height: 10px;
+    width: 10px;
+}
+
+.calendar-dot-past {
+    background: #d26d76;
+    box-shadow: 0 0 0 4px rgba(210, 109, 118, 0.12);
+}
+
 .btn.btn-primary {
     background-color: var(--app-primary);
     border-color: var(--app-primary);
@@ -174,6 +281,15 @@ textarea.form-control:focus {
 
     .app-topbar .topbar-actions {
         width: 100%;
+    }
+
+    .app-filters .form-select[multiple] {
+        min-height: 6.3rem;
+    }
+
+    .calendar-day {
+        min-height: 48px;
+        padding: 0.35rem 0.4rem;
     }
 }
 
