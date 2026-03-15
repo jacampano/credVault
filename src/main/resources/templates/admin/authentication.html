@@ -66,6 +66,14 @@
 
                 <div class="row g-3">
                     <div class="col-md-6">
+                        <label class="form-label">Proveedor OAuth</label>
+                        <select class="form-select" th:field="*{oauthProvider}" id="oauthProvider">
+                            <option th:value="${T(io.github.jacampano.credvault.security.OAuthProvider).generic}">Genérico</option>
+                            <option th:value="${T(io.github.jacampano.credvault.security.OAuthProvider).gitlab}">GitLab</option>
+                        </select>
+                        <div class="text-danger small" th:errors="*{oauthProvider}"></div>
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label">Client ID</label>
                         <input class="form-control" type="text" th:field="*{oauthClientId}">
                         <div class="text-danger small" th:errors="*{oauthClientId}"></div>
@@ -76,19 +84,13 @@
                         <div class="text-danger small" th:errors="*{oauthClientSecret}"></div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Authorization URI</label>
-                        <input class="form-control" type="url" placeholder="https://idp.example.com/oauth2/authorize" th:field="*{oauthAuthorizationUri}">
-                        <div class="text-danger small" th:errors="*{oauthAuthorizationUri}"></div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Token URI</label>
-                        <input class="form-control" type="url" placeholder="https://idp.example.com/oauth2/token" th:field="*{oauthTokenUri}">
-                        <div class="text-danger small" th:errors="*{oauthTokenUri}"></div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">User Info URI</label>
-                        <input class="form-control" type="url" placeholder="https://idp.example.com/userinfo" th:field="*{oauthUserInfoUri}">
-                        <div class="text-danger small" th:errors="*{oauthUserInfoUri}"></div>
+                        <label class="form-label">Método autenticación cliente (token)</label>
+                        <select class="form-select" th:field="*{oauthClientAuthenticationMethod}">
+                            <option th:value="${T(io.github.jacampano.credvault.security.OAuthClientAuthenticationMethod).client_secret_post}">client_secret_post</option>
+                            <option th:value="${T(io.github.jacampano.credvault.security.OAuthClientAuthenticationMethod).client_secret_basic}">client_secret_basic</option>
+                        </select>
+                        <div class="text-danger small" th:errors="*{oauthClientAuthenticationMethod}"></div>
+                        <div class="form-text">Para GitLab self-managed suele funcionar mejor <code>client_secret_post</code>.</div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">User Name Attribute</label>
@@ -97,7 +99,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Scopes (CSV)</label>
-                        <input class="form-control" type="text" placeholder="openid,profile,email" th:field="*{oauthScopes}">
+                        <input class="form-control" type="text" placeholder="profile,email,read_user,read_api" th:field="*{oauthScopes}">
                         <div class="text-danger small" th:errors="*{oauthScopes}"></div>
                     </div>
                     <div class="col-md-6">
@@ -107,8 +109,44 @@
                         <div class="form-text">Debe coincidir con la URL configurada en el proveedor OAuth.</div>
                     </div>
                     <div class="col-12">
-                        <label class="form-label">Usuarios OAuth con rol ADMIN (CSV)</label>
-                        <input class="form-control" type="text" placeholder="admin@empresa.com,secops@empresa.com" th:field="*{oauthAdminUsers}">
+                        <label class="form-label">Grupo(s) GitLab con rol ADMIN (CSV)</label>
+                        <input class="form-control" type="text" placeholder="credvault-admin,secops-admin" th:field="*{oauthAdminGroups}">
+                        <div class="form-text">Si el usuario pertenece a alguno de estos grupos, se asigna rol ADMIN.</div>
+                    </div>
+                    <div id="gitlabInfoBlock" class="col-12">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Gitlab Base URL</label>
+                                <input class="form-control" type="url" placeholder="https://gitlab.com" th:field="*{oauthGitlabBaseUrl}">
+                                <div class="text-danger small" th:errors="*{oauthGitlabBaseUrl}"></div>
+                                <div class="form-text">Ejemplo: https://gitlab.com o tu instancia self-hosted.</div>
+                            </div>
+                            <div class="col-12 alert alert-info mb-0">
+                                En modo GitLab, con la base indicada se generan automáticamente:
+                                <code>/oauth/authorize</code>,
+                                <code>/oauth/token</code>,
+                                <code>/api/v4/user</code>.
+                            </div>
+                        </div>
+                    </div>
+                    <div id="genericOauthBlock" class="col-12">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Authorization URI</label>
+                                <input class="form-control" type="url" placeholder="https://idp.example.com/oauth2/authorize" th:field="*{oauthAuthorizationUri}">
+                                <div class="text-danger small" th:errors="*{oauthAuthorizationUri}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Token URI</label>
+                                <input class="form-control" type="url" placeholder="https://idp.example.com/oauth2/token" th:field="*{oauthTokenUri}">
+                                <div class="text-danger small" th:errors="*{oauthTokenUri}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">User Info URI</label>
+                                <input class="form-control" type="url" placeholder="https://idp.example.com/userinfo" th:field="*{oauthUserInfoUri}">
+                                <div class="text-danger small" th:errors="*{oauthUserInfoUri}"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,15 +161,28 @@
     (function () {
         const modeSelect = document.getElementById('authMode');
         const oauthBlock = document.getElementById('oauthSettingsBlock');
+        const providerSelect = document.getElementById('oauthProvider');
+        const genericBlock = document.getElementById('genericOauthBlock');
+        const gitlabInfoBlock = document.getElementById('gitlabInfoBlock');
         if (!modeSelect || !oauthBlock) {
             return;
         }
 
         function updateOauthVisibility() {
-            oauthBlock.style.display = modeSelect.value === 'oauth' ? 'block' : 'none';
+            const oauthEnabled = modeSelect.value === 'oauth';
+            oauthBlock.style.display = oauthEnabled ? 'block' : 'none';
+            if (!providerSelect || !genericBlock || !gitlabInfoBlock) {
+                return;
+            }
+            const isGitlab = providerSelect.value === 'gitlab';
+            genericBlock.style.display = oauthEnabled && !isGitlab ? 'block' : 'none';
+            gitlabInfoBlock.style.display = oauthEnabled && isGitlab ? 'block' : 'none';
         }
 
         modeSelect.addEventListener('change', updateOauthVisibility);
+        if (providerSelect) {
+            providerSelect.addEventListener('change', updateOauthVisibility);
+        }
         updateOauthVisibility();
     })();
 </script>

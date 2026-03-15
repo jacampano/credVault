@@ -23,11 +23,14 @@
                 <div class="alert alert-danger" th:if="${param.error}">
                     Usuario o contraseña incorrectos.
                 </div>
+                <div class="alert alert-danger" th:if="${param.oauthError}">
+                    Error en autenticación OAuth. Revisa la configuración o los logs.
+                </div>
                 <div class="alert alert-success" th:if="${param.logout}">
                     Sesión cerrada correctamente.
                 </div>
 
-                <form th:action="@{/login}" method="post">
+                <form th:if="${!oauthEnabled}" th:action="@{/login}" method="post">
                     <div class="mb-3">
                         <label class="form-label" for="username">Usuario</label>
                         <input class="form-control" id="username" type="text" name="username" autocomplete="username" required autofocus>
@@ -38,6 +41,13 @@
                     </div>
                     <button class="btn btn-primary w-100" type="submit">Entrar</button>
                 </form>
+                <div th:if="${oauthEnabled}" class="d-grid gap-2">
+                    <a class="btn btn-primary w-100"
+                       th:href="@{/oauth2/authorization/credvault}"
+                       th:text="${'Login via ' + oauthProviderName}">
+                        Login via OAuth
+                    </a>
+                </div>
             </div>
         </div>
     </div>

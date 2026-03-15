@@ -6,6 +6,8 @@ import io.github.jacampano.credvault.dto.admin.UserAdminForm;
 import io.github.jacampano.credvault.security.AuthMode;
 import io.github.jacampano.credvault.security.AuthSettingsService;
 import io.github.jacampano.credvault.security.EffectiveAuthSettings;
+import io.github.jacampano.credvault.security.OAuthClientAuthenticationMethod;
+import io.github.jacampano.credvault.security.OAuthProvider;
 import io.github.jacampano.credvault.service.AdminTeamService;
 import io.github.jacampano.credvault.service.AdminUserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -285,8 +287,10 @@ class AdminUserControllerTest {
     private EffectiveAuthSettings localSettings() {
         return new EffectiveAuthSettings(
                 AuthMode.local,
+                OAuthProvider.generic,
                 null,
                 null,
+                OAuthClientAuthenticationMethod.client_secret_post,
                 null,
                 null,
                 null,
@@ -300,8 +304,10 @@ class AdminUserControllerTest {
     private EffectiveAuthSettings oauthSettings() {
         return new EffectiveAuthSettings(
                 AuthMode.oauth,
+                OAuthProvider.generic,
                 "id",
                 "secret",
+                OAuthClientAuthenticationMethod.client_secret_post,
                 "https://auth.example/authorize",
                 "https://auth.example/token",
                 "https://auth.example/userinfo",

@@ -18,6 +18,10 @@ public class AuthSettingsService {
 
     public static final String OAUTH_REGISTRATION_ID = "credvault";
     public static final String DEFAULT_REDIRECT_URI = "{baseUrl}/oauth2/callback/{registrationId}";
+    public static final String DEFAULT_GITLAB_BASE_URL = "https://gitlab.com";
+    public static final String GITLAB_AUTHORIZATION_PATH = "/oauth/authorize";
+    public static final String GITLAB_TOKEN_PATH = "/oauth/token";
+    public static final String GITLAB_USER_INFO_PATH = "/api/v4/user";
 
     private final AuthProperties authProperties;
     private final AuthSettingsRepository authSettingsRepository;
@@ -33,18 +37,42 @@ public class AuthSettingsService {
         AuthSettings stored = findStoredSettings().orElse(null);
 
         AuthMode mode = resolveMode(firstNonBlank(authProperties.getMode(), stored != null ? stored.getMode().name() : null));
+        OAuthProvider provider = resolveProvider(firstNonBlank(
+                authProperties.getOauthProvider(),
+                stored != null && stored.getOauthProvider() != null ? stored.getOauthProvider().name() : null
+        ));
+        String oauthGitlabBaseUrl = firstNonBlank(
+                authProperties.getOauthGitlabBaseUrl(),
+                stored != null ? stored.getOauthGitlabBaseUrl() : null
+        );
+        OAuthClientAuthenticationMethod oauthClientAuthenticationMethod = resolveClientAuthenticationMethod(firstNonBlank(
+                authProperties.getOauthClientAuthenticationMethod(),
+                stored != null && stored.getOauthClientAuthenticationMethod() != null ? stored.getOauthClientAuthenticationMethod().name() : null
+        ));
+        String oauthAuthorizationUri = firstNonBlank(authProperties.getOauthAuthorizationUri(), stored != null ? stored.getOauthAuthorizationUri() : null);
+        String oauthTokenUri = firstNonBlank(authProperties.getOauthTokenUri(), stored != null ? stored.getOauthTokenUri() : null);
+        String oauthUserInfoUri = firstNonBlank(authProperties.getOauthUserInfoUri(), stored != null ? stored.getOauthUserInfoUri() : null);
+        if (provider == OAuthProvider.gitlab) {
+            String baseUrl = normalizeGitlabBaseUrl(firstNonBlank(oauthGitlabBaseUrl, DEFAULT_GITLAB_BASE_URL));
+            oauthAuthorizationUri = joinUrl(baseUrl, GITLAB_AUTHORIZATION_PATH);
+            oauthTokenUri = joinUrl(baseUrl, GITLAB_TOKEN_PATH);
+            oauthUserInfoUri = joinUrl(baseUrl, GITLAB_USER_INFO_PATH);
+            oauthGitlabBaseUrl = baseUrl;
+        }
 
         return new EffectiveAuthSettings(
                 mode,
+                provider,
                 firstNonBlank(authProperties.getOauthClientId(), stored != null ? stored.getOauthClientId() : null),
                 firstNonBlank(authProperties.getOauthClientSecret(), stored != null ? stored.getOauthClientSecret() : null),
-                firstNonBlank(authProperties.getOauthAuthorizationUri(), stored != null ? stored.getOauthAuthorizationUri() : null),
-                firstNonBlank(authProperties.getOauthTokenUri(), stored != null ? stored.getOauthTokenUri() : null),
-                firstNonBlank(authProperties.getOauthUserInfoUri(), stored != null ? stored.getOauthUserInfoUri() : null),
+                oauthClientAuthenticationMethod,
+                oauthAuthorizationUri,
+                oauthTokenUri,
+                oauthUserInfoUri,
                 firstNonBlank(authProperties.getOauthUserNameAttribute(), stored != null ? stored.getOauthUserNameAttribute() : null),
                 firstNonBlank(authProperties.getOauthScopes(), stored != null ? stored.getOauthScopes() : null),
                 firstNonBlank(authProperties.getOauthRedirectUri(), stored != null ? stored.getOauthRedirectUri() : DEFAULT_REDIRECT_URI),
-                firstNonBlank(authProperties.getOauthAdminUsers(), stored != null ? stored.getOauthAdminUsers() : null)
+                firstNonBlank(authProperties.getOauthAdminGroups(), stored != null ? stored.getOauthAdminGroups() : null)
         );
     }
 
@@ -55,20 +83,28 @@ public class AuthSettingsService {
 
         if (stored != null) {
             form.setMode(stored.getMode());
+            form.setOauthProvider(stored.getOauthProvider() == null ? OAuthProvider.generic : stored.getOauthProvider());
             form.setOauthClientId(stored.getOauthClientId());
             form.setOauthClientSecret(stored.getOauthClientSecret());
+            form.setOauthClientAuthenticationMethod(stored.getOauthClientAuthenticationMethod() == null
+                    ? OAuthClientAuthenticationMethod.client_secret_post
+                    : stored.getOauthClientAuthenticationMethod());
+            form.setOauthGitlabBaseUrl(stored.getOauthGitlabBaseUrl());
             form.setOauthAuthorizationUri(stored.getOauthAuthorizationUri());
             form.setOauthTokenUri(stored.getOauthTokenUri());
             form.setOauthUserInfoUri(stored.getOauthUserInfoUri());
             form.setOauthUserNameAttribute(stored.getOauthUserNameAttribute());
             form.setOauthScopes(stored.getOauthScopes());
             form.setOauthRedirectUri(stored.getOauthRedirectUri());
-            form.setOauthAdminUsers(stored.getOauthAdminUsers());
+            form.setOauthAdminGroups(stored.getOauthAdminGroups());
             return form;
         }
 
         form.setMode(AuthMode.local);
-        form.setOauthScopes("openid,profile,email");
+        form.setOauthProvider(OAuthProvider.generic);
+        form.setOauthClientAuthenticationMethod(OAuthClientAuthenticationMethod.client_secret_post);
+        form.setOauthGitlabBaseUrl(DEFAULT_GITLAB_BASE_URL);
+        form.setOauthScopes("profile,email,read_user,read_api");
         form.setOauthRedirectUri(DEFAULT_REDIRECT_URI);
         return form;
     }
@@ -81,16 +117,29 @@ public class AuthSettingsService {
             return created;
         });
 
+        OAuthProvider provider = form.getOauthProvider() == null ? OAuthProvider.generic : form.getOauthProvider();
         settings.setMode(form.getMode());
+        settings.setOauthProvider(provider);
         settings.setOauthClientId(trimToNull(form.getOauthClientId()));
         settings.setOauthClientSecret(trimToNull(form.getOauthClientSecret()));
-        settings.setOauthAuthorizationUri(trimToNull(form.getOauthAuthorizationUri()));
-        settings.setOauthTokenUri(trimToNull(form.getOauthTokenUri()));
-        settings.setOauthUserInfoUri(trimToNull(form.getOauthUserInfoUri()));
+        settings.setOauthClientAuthenticationMethod(form.getOauthClientAuthenticationMethod() == null
+                ? OAuthClientAuthenticationMethod.client_secret_post
+                : form.getOauthClientAuthenticationMethod());
+        String gitlabBaseUrl = normalizeGitlabBaseUrl(firstNonBlank(form.getOauthGitlabBaseUrl(), DEFAULT_GITLAB_BASE_URL));
+        settings.setOauthGitlabBaseUrl(provider == OAuthProvider.gitlab ? gitlabBaseUrl : trimToNull(form.getOauthGitlabBaseUrl()));
+        settings.setOauthAuthorizationUri(provider == OAuthProvider.gitlab
+                ? joinUrl(gitlabBaseUrl, GITLAB_AUTHORIZATION_PATH)
+                : trimToNull(form.getOauthAuthorizationUri()));
+        settings.setOauthTokenUri(provider == OAuthProvider.gitlab
+                ? joinUrl(gitlabBaseUrl, GITLAB_TOKEN_PATH)
+                : trimToNull(form.getOauthTokenUri()));
+        settings.setOauthUserInfoUri(provider == OAuthProvider.gitlab
+                ? joinUrl(gitlabBaseUrl, GITLAB_USER_INFO_PATH)
+                : trimToNull(form.getOauthUserInfoUri()));
         settings.setOauthUserNameAttribute(trimToNull(form.getOauthUserNameAttribute()));
         settings.setOauthScopes(trimToNull(form.getOauthScopes()));
         settings.setOauthRedirectUri(trimToNull(form.getOauthRedirectUri()));
-        settings.setOauthAdminUsers(trimToNull(form.getOauthAdminUsers()));
+        settings.setOauthAdminGroups(trimToNull(form.getOauthAdminGroups()));
 
         authSettingsRepository.save(settings);
     }
@@ -99,15 +148,18 @@ public class AuthSettingsService {
     public Map<String, String> findActiveEnvironmentOverrides() {
         Map<String, String> overrides = new LinkedHashMap<>();
         putIfPresent(overrides, "APP_AUTH_MODE", authProperties.getMode());
+        putIfPresent(overrides, "APP_AUTH_OAUTH_PROVIDER", authProperties.getOauthProvider());
         putIfPresent(overrides, "APP_AUTH_OAUTH_CLIENT_ID", authProperties.getOauthClientId());
         putIfPresent(overrides, "APP_AUTH_OAUTH_CLIENT_SECRET", maskSecret(authProperties.getOauthClientSecret()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_CLIENT_AUTHENTICATION_METHOD", authProperties.getOauthClientAuthenticationMethod());
+        putIfPresent(overrides, "APP_AUTH_OAUTH_GITLAB_BASE_URL", authProperties.getOauthGitlabBaseUrl());
         putIfPresent(overrides, "APP_AUTH_OAUTH_AUTHORIZATION_URI", authProperties.getOauthAuthorizationUri());
         putIfPresent(overrides, "APP_AUTH_OAUTH_TOKEN_URI", authProperties.getOauthTokenUri());
         putIfPresent(overrides, "APP_AUTH_OAUTH_USER_INFO_URI", authProperties.getOauthUserInfoUri());
         putIfPresent(overrides, "APP_AUTH_OAUTH_USER_NAME_ATTRIBUTE", authProperties.getOauthUserNameAttribute());
         putIfPresent(overrides, "APP_AUTH_OAUTH_SCOPES", authProperties.getOauthScopes());
         putIfPresent(overrides, "APP_AUTH_OAUTH_REDIRECT_URI", authProperties.getOauthRedirectUri());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_ADMIN_USERS", authProperties.getOauthAdminUsers());
+        putIfPresent(overrides, "APP_AUTH_OAUTH_ADMIN_GROUPS", authProperties.getOauthAdminGroups());
         return overrides;
     }
 
@@ -170,12 +222,47 @@ public class AuthSettingsService {
         }
     }
 
+    private OAuthProvider resolveProvider(String rawProvider) {
+        if (!StringUtils.hasText(rawProvider)) {
+            return OAuthProvider.generic;
+        }
+
+        try {
+            return OAuthProvider.valueOf(rawProvider.trim().toLowerCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return OAuthProvider.generic;
+        }
+    }
+
+    private OAuthClientAuthenticationMethod resolveClientAuthenticationMethod(String rawMethod) {
+        if (!StringUtils.hasText(rawMethod)) {
+            return OAuthClientAuthenticationMethod.client_secret_post;
+        }
+        try {
+            return OAuthClientAuthenticationMethod.valueOf(rawMethod.trim().toLowerCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return OAuthClientAuthenticationMethod.client_secret_post;
+        }
+    }
+
     private String firstNonBlank(String first, String second) {
         return StringUtils.hasText(first) ? first.trim() : trimToNull(second);
     }
 
     private String trimToNull(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
+    }
+
+    private String normalizeGitlabBaseUrl(String baseUrl) {
+        String normalized = baseUrl == null ? DEFAULT_GITLAB_BASE_URL : baseUrl.trim();
+        while (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        return normalized;
+    }
+
+    private String joinUrl(String baseUrl, String path) {
+        return normalizeGitlabBaseUrl(baseUrl) + path;
     }
 
     private String maskSecret(String value) {

@@ -8,15 +8,18 @@ public class AuthProperties {
     private String mode;
     private String localAdminUsername;
     private String localAdminPassword;
+    private String oauthProvider;
     private String oauthClientId;
     private String oauthClientSecret;
+    private String oauthClientAuthenticationMethod;
+    private String oauthGitlabBaseUrl;
     private String oauthAuthorizationUri;
     private String oauthTokenUri;
     private String oauthUserInfoUri;
     private String oauthUserNameAttribute;
     private String oauthScopes;
     private String oauthRedirectUri;
-    private String oauthAdminUsers;
+    private String oauthAdminGroups;
 
     public String getMode() {
         return mode;
@@ -42,6 +45,14 @@ public class AuthProperties {
         this.localAdminPassword = localAdminPassword;
     }
 
+    public String getOauthProvider() {
+        return oauthProvider;
+    }
+
+    public void setOauthProvider(String oauthProvider) {
+        this.oauthProvider = oauthProvider;
+    }
+
     public String getOauthClientId() {
         return oauthClientId;
     }
@@ -56,6 +67,22 @@ public class AuthProperties {
 
     public void setOauthClientSecret(String oauthClientSecret) {
         this.oauthClientSecret = oauthClientSecret;
+    }
+
+    public String getOauthClientAuthenticationMethod() {
+        return oauthClientAuthenticationMethod;
+    }
+
+    public void setOauthClientAuthenticationMethod(String oauthClientAuthenticationMethod) {
+        this.oauthClientAuthenticationMethod = oauthClientAuthenticationMethod;
+    }
+
+    public String getOauthGitlabBaseUrl() {
+        return oauthGitlabBaseUrl;
+    }
+
+    public void setOauthGitlabBaseUrl(String oauthGitlabBaseUrl) {
+        this.oauthGitlabBaseUrl = oauthGitlabBaseUrl;
     }
 
     public String getOauthAuthorizationUri() {
@@ -106,11 +133,11 @@ public class AuthProperties {
         this.oauthRedirectUri = oauthRedirectUri;
     }
 
-    public String getOauthAdminUsers() {
-        return oauthAdminUsers;
+    public String getOauthAdminGroups() {
+        return oauthAdminGroups;
     }
 
-    public void setOauthAdminUsers(String oauthAdminUsers) {
-        this.oauthAdminUsers = oauthAdminUsers;
+    public void setOauthAdminGroups(String oauthAdminGroups) {
+        this.oauthAdminGroups = oauthAdminGroups;
     }
 }

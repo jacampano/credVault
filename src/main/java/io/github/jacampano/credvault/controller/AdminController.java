@@ -3,6 +3,7 @@ package io.github.jacampano.credvault.controller;
 import io.github.jacampano.credvault.dto.admin.AuthenticationSettingsForm;
 import io.github.jacampano.credvault.security.AuthMode;
 import io.github.jacampano.credvault.security.AuthSettingsService;
+import io.github.jacampano.credvault.security.OAuthProvider;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -64,9 +65,7 @@ public class AdminController {
         Map<String, String> required = Map.of(
                 "oauthClientId", "Client ID",
                 "oauthClientSecret", "Client Secret",
-                "oauthAuthorizationUri", "Authorization URI",
-                "oauthTokenUri", "Token URI",
-                "oauthUserInfoUri", "User Info URI",
+                "oauthClientAuthenticationMethod", "Método de autenticación de cliente",
                 "oauthUserNameAttribute", "Atributo de usuario",
                 "oauthRedirectUri", "URL de retorno",
                 "oauthScopes", "Scopes"
@@ -80,12 +79,40 @@ public class AdminController {
                         label + " es obligatorio si no se define por variable de entorno"));
             }
         });
+
+        if (form.getOauthProvider() == OAuthProvider.generic) {
+            Map<String, String> genericRequired = Map.of(
+                    "oauthAuthorizationUri", "Authorization URI",
+                    "oauthTokenUri", "Token URI",
+                    "oauthUserInfoUri", "User Info URI"
+            );
+            genericRequired.forEach((field, label) -> {
+                Object value = bindingResult.getFieldValue(field);
+                boolean empty = value == null || value.toString().isBlank();
+                if (empty && !envOverrides.containsKey(toEnvKey(field))) {
+                    bindingResult.addError(new FieldError("form", field,
+                            label + " es obligatorio si el proveedor OAuth es genérico y no se define por variable de entorno"));
+                }
+            });
+        }
+
+        if (form.getOauthProvider() == OAuthProvider.gitlab) {
+            Object value = bindingResult.getFieldValue("oauthGitlabBaseUrl");
+            boolean empty = value == null || value.toString().isBlank();
+            if (empty && !envOverrides.containsKey(toEnvKey("oauthGitlabBaseUrl"))) {
+                bindingResult.addError(new FieldError("form", "oauthGitlabBaseUrl",
+                        "Gitlab Base URL es obligatorio si el proveedor OAuth es GitLab y no se define por variable de entorno"));
+            }
+        }
     }
 
     private String toEnvKey(String field) {
         return switch (field) {
             case "oauthClientId" -> "APP_AUTH_OAUTH_CLIENT_ID";
             case "oauthClientSecret" -> "APP_AUTH_OAUTH_CLIENT_SECRET";
+            case "oauthClientAuthenticationMethod" -> "APP_AUTH_OAUTH_CLIENT_AUTHENTICATION_METHOD";
+            case "oauthProvider" -> "APP_AUTH_OAUTH_PROVIDER";
+            case "oauthGitlabBaseUrl" -> "APP_AUTH_OAUTH_GITLAB_BASE_URL";
             case "oauthAuthorizationUri" -> "APP_AUTH_OAUTH_AUTHORIZATION_URI";
             case "oauthTokenUri" -> "APP_AUTH_OAUTH_TOKEN_URI";
             case "oauthUserInfoUri" -> "APP_AUTH_OAUTH_USER_INFO_URI";

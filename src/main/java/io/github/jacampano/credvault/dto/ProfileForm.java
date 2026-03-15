@@ -8,11 +8,8 @@ public class ProfileForm {
     @Size(max = 120)
     private String username;
 
-    @Size(max = 120)
-    private String firstName;
-
-    @Size(max = 120)
-    private String lastName;
+    @Size(max = 240)
+    private String fullName;
 
     @Email
     @Size(max = 200)
@@ -26,20 +23,12 @@ public class ProfileForm {
         this.username = username;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getEmail() {

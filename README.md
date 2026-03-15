@@ -79,8 +79,8 @@ Gestión de usuarios (`/admin/users`):
 
 Perfil de usuario (`/profile`):
 
-- Se muestran: `Nombre de usuario`, `Nombre`, `Apellidos`, `Email`.
-- En modo `local`: `Nombre`, `Apellidos` y `Email` son editables y se guardan en BBDD.
+- Se muestran: `Nombre de usuario`, `Nombre completo`, `Email`.
+- En modo `local`: `Nombre completo` y `Email` son editables y se guardan en BBDD.
 - En modo `oauth`: los datos se muestran en solo lectura y se actualizan con la información recibida del proveedor OAuth.
 
 ### Modo OAuth
@@ -96,9 +96,9 @@ Variables OAuth soportadas:
 - `APP_AUTH_OAUTH_TOKEN_URI`
 - `APP_AUTH_OAUTH_USER_INFO_URI`
 - `APP_AUTH_OAUTH_USER_NAME_ATTRIBUTE`
-- `APP_AUTH_OAUTH_SCOPES` (CSV, por ejemplo: `openid,profile,email`)
+- `APP_AUTH_OAUTH_SCOPES` (CSV, por ejemplo: `profile,email,read_user,read_api`)
 - `APP_AUTH_OAUTH_REDIRECT_URI`
-- `APP_AUTH_OAUTH_ADMIN_USERS` (CSV de usuarios OAuth que serán `ADMIN`)
+- `APP_AUTH_OAUTH_ADMIN_GROUPS` (CSV de grupos GitLab que serán `ADMIN`)
 
 URL de retorno OAuth implementada:
 
@@ -117,9 +117,9 @@ export APP_AUTH_OAUTH_AUTHORIZATION_URI="https://idp.example.com/oauth2/authoriz
 export APP_AUTH_OAUTH_TOKEN_URI="https://idp.example.com/oauth2/token"
 export APP_AUTH_OAUTH_USER_INFO_URI="https://idp.example.com/oauth2/userinfo"
 export APP_AUTH_OAUTH_USER_NAME_ATTRIBUTE="email"
-export APP_AUTH_OAUTH_SCOPES="openid,profile,email"
+export APP_AUTH_OAUTH_SCOPES="profile,email,read_user,read_api"
 export APP_AUTH_OAUTH_REDIRECT_URI="{baseUrl}/oauth2/callback/{registrationId}"
-export APP_AUTH_OAUTH_ADMIN_USERS="admin@empresa.com,secops@empresa.com"
+export APP_AUTH_OAUTH_ADMIN_GROUPS="credvault-admin,secops-admin"
 ```
 
 ## Ejecución en producción (perfil prod)

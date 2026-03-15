@@ -15,3 +15,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+logging:
+  level:
+    org.springframework.security.oauth2.client: DEBUG
+    org.springframework.security.web.authentication: DEBUG

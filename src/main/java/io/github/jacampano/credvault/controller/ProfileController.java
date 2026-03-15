@@ -19,6 +19,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.util.StringUtils;
 
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 public class ProfileController {
@@ -42,6 +44,7 @@ public class ProfileController {
         model.addAttribute("form", form);
         model.addAttribute("editable", mode == AuthMode.local);
         model.addAttribute("mode", mode.name());
+        model.addAttribute("oauthGroups", mode == AuthMode.oauth ? extractOauthGroups(authentication) : List.of());
         return "profile/view";
     }
 
@@ -68,8 +71,9 @@ public class ProfileController {
         AppUser user = appUserRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new IllegalStateException("Usuario local no encontrado"));
 
-        user.setFirstName(trimToNull(form.getFirstName()));
-        user.setLastName(trimToNull(form.getLastName()));
+        NameParts nameParts = splitFullName(form.getFullName());
+        user.setFirstName(nameParts.firstName());
+        user.setLastName(nameParts.lastName());
         user.setEmail(trimToNull(form.getEmail()));
         appUserRepository.save(user);
 
@@ -82,8 +86,7 @@ public class ProfileController {
         form.setUsername(username);
 
         appUserRepository.findByUsername(username).ifPresent(user -> {
-            form.setFirstName(user.getFirstName());
-            form.setLastName(user.getLastName());
+            form.setFullName(joinFullName(user.getFirstName(), user.getLastName()));
             form.setEmail(user.getEmail());
         });
 
@@ -94,29 +97,52 @@ public class ProfileController {
         ProfileForm form = new ProfileForm();
 
         String username = authentication.getName();
-        String firstName = null;
-        String lastName = null;
+        String fullName = null;
         String email = null;
 
         Object principal = authentication.getPrincipal();
         if (principal instanceof OidcUser oidcUser) {
             username = firstNonBlank(oidcUser.getPreferredUsername(), oidcUser.getEmail(), oidcUser.getName(), username);
-            firstName = firstNonBlank(oidcUser.getGivenName(), oidcUser.getClaimAsString("given_name"));
-            lastName = firstNonBlank(oidcUser.getFamilyName(), oidcUser.getClaimAsString("family_name"));
+            fullName = firstNonBlank(
+                    oidcUser.getFullName(),
+                    joinFullName(oidcUser.getGivenName(), oidcUser.getFamilyName()),
+                    joinFullName(oidcUser.getClaimAsString("given_name"), oidcUser.getClaimAsString("family_name")),
+                    oidcUser.getName()
+            );
             email = firstNonBlank(oidcUser.getEmail(), oidcUser.getClaimAsString("email"));
         } else if (principal instanceof OAuth2User oauth2User) {
             Map<String, Object> attrs = oauth2User.getAttributes();
-            username = firstNonBlank(readString(attrs, "preferred_username"), readString(attrs, "login"), readString(attrs, "name"), username);
-            firstName = firstNonBlank(readString(attrs, "given_name"), readString(attrs, "first_name"));
-            lastName = firstNonBlank(readString(attrs, "family_name"), readString(attrs, "last_name"));
+            username = firstNonBlank(readString(attrs, "username"), readString(attrs, "preferred_username"), readString(attrs, "login"), readString(attrs, "name"), username);
+            fullName = firstNonBlank(
+                    readString(attrs, "name"),
+                    joinFullName(readString(attrs, "given_name"), readString(attrs, "family_name")),
+                    joinFullName(readString(attrs, "first_name"), readString(attrs, "last_name"))
+            );
             email = firstNonBlank(readString(attrs, "email"));
         }
 
         form.setUsername(username);
-        form.setFirstName(firstName);
-        form.setLastName(lastName);
+        form.setFullName(fullName);
         form.setEmail(email);
         return form;
+    }
+
+    private List<String> extractOauthGroups(Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof OAuth2User oauth2User)) {
+            return List.of();
+        }
+        Object groups = oauth2User.getAttributes().get("gitlabGroupPaths");
+        if (!(groups instanceof List<?> list)) {
+            return List.of();
+        }
+        List<String> result = new ArrayList<>();
+        for (Object item : list) {
+            if (item instanceof String value && StringUtils.hasText(value)) {
+                result.add(value.trim());
+            }
+        }
+        return result;
     }
 
     private String readString(Map<String, Object> attrs, String key) {
@@ -138,5 +164,37 @@ public class ProfileController {
 
     private String trimToNull(String value) {
         return StringUtils.hasText(value) ? value.trim() : null;
+    }
+
+    private String joinFullName(String firstName, String lastName) {
+        String first = trimToNull(firstName);
+        String last = trimToNull(lastName);
+        if (first == null && last == null) {
+            return null;
+        }
+        if (first == null) {
+            return last;
+        }
+        if (last == null) {
+            return first;
+        }
+        return first + " " + last;
+    }
+
+    private NameParts splitFullName(String fullName) {
+        String normalized = trimToNull(fullName);
+        if (normalized == null) {
+            return new NameParts(null, null);
+        }
+        int firstSpace = normalized.indexOf(' ');
+        if (firstSpace < 0) {
+            return new NameParts(normalized, null);
+        }
+        String first = trimToNull(normalized.substring(0, firstSpace));
+        String last = trimToNull(normalized.substring(firstSpace + 1));
+        return new NameParts(first, last);
+    }
+
+    private record NameParts(String firstName, String lastName) {
     }
 }

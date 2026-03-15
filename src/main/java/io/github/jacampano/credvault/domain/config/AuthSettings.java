@@ -1,6 +1,8 @@
 package io.github.jacampano.credvault.domain.config;
 
 import io.github.jacampano.credvault.security.AuthMode;
+import io.github.jacampano.credvault.security.OAuthClientAuthenticationMethod;
+import io.github.jacampano.credvault.security.OAuthProvider;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -25,11 +27,22 @@ public class AuthSettings {
     @Column(nullable = false, length = 20)
     private AuthMode mode = AuthMode.local;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private OAuthProvider oauthProvider = OAuthProvider.generic;
+
     @Column(length = 200)
     private String oauthClientId;
 
     @Column(length = 500)
     private String oauthClientSecret;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 40)
+    private OAuthClientAuthenticationMethod oauthClientAuthenticationMethod = OAuthClientAuthenticationMethod.client_secret_post;
+
+    @Column(length = 1000)
+    private String oauthGitlabBaseUrl;
 
     @Column(length = 1000)
     private String oauthAuthorizationUri;
@@ -49,8 +62,8 @@ public class AuthSettings {
     @Column(length = 1000)
     private String oauthRedirectUri;
 
-    @Column(length = 1000)
-    private String oauthAdminUsers;
+    @Column(name = "oauth_admin_users", length = 1000)
+    private String oauthAdminGroups;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -86,6 +99,14 @@ public class AuthSettings {
         this.mode = mode;
     }
 
+    public OAuthProvider getOauthProvider() {
+        return oauthProvider;
+    }
+
+    public void setOauthProvider(OAuthProvider oauthProvider) {
+        this.oauthProvider = oauthProvider;
+    }
+
     public String getOauthClientId() {
         return oauthClientId;
     }
@@ -100,6 +121,22 @@ public class AuthSettings {
 
     public void setOauthClientSecret(String oauthClientSecret) {
         this.oauthClientSecret = oauthClientSecret;
+    }
+
+    public OAuthClientAuthenticationMethod getOauthClientAuthenticationMethod() {
+        return oauthClientAuthenticationMethod;
+    }
+
+    public void setOauthClientAuthenticationMethod(OAuthClientAuthenticationMethod oauthClientAuthenticationMethod) {
+        this.oauthClientAuthenticationMethod = oauthClientAuthenticationMethod;
+    }
+
+    public String getOauthGitlabBaseUrl() {
+        return oauthGitlabBaseUrl;
+    }
+
+    public void setOauthGitlabBaseUrl(String oauthGitlabBaseUrl) {
+        this.oauthGitlabBaseUrl = oauthGitlabBaseUrl;
     }
 
     public String getOauthAuthorizationUri() {
@@ -150,11 +187,11 @@ public class AuthSettings {
         this.oauthRedirectUri = oauthRedirectUri;
     }
 
-    public String getOauthAdminUsers() {
-        return oauthAdminUsers;
+    public String getOauthAdminGroups() {
+        return oauthAdminGroups;
     }
 
-    public void setOauthAdminUsers(String oauthAdminUsers) {
-        this.oauthAdminUsers = oauthAdminUsers;
+    public void setOauthAdminGroups(String oauthAdminGroups) {
+        this.oauthAdminGroups = oauthAdminGroups;
     }
 }

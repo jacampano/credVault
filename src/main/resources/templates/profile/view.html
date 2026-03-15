@@ -48,19 +48,23 @@
                     <input class="form-control" type="text" th:field="*{username}" readonly>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Nombre</label>
-                    <input class="form-control" type="text" th:field="*{firstName}" th:readonly="${!editable}">
-                    <div class="text-danger small" th:errors="*{firstName}"></div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Apellidos</label>
-                    <input class="form-control" type="text" th:field="*{lastName}" th:readonly="${!editable}">
-                    <div class="text-danger small" th:errors="*{lastName}"></div>
+                    <label class="form-label">Nombre completo</label>
+                    <input class="form-control" type="text" th:field="*{fullName}" th:readonly="${!editable}">
+                    <div class="text-danger small" th:errors="*{fullName}"></div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Email</label>
                     <input class="form-control" type="email" th:field="*{email}" th:readonly="${!editable}">
                     <div class="text-danger small" th:errors="*{email}"></div>
+                </div>
+                <div class="col-12" th:if="${!editable}">
+                    <label class="form-label">Grupos GitLab</label>
+                    <div class="form-control" style="min-height: 44px;" th:if="${#lists.isEmpty(oauthGroups)}">
+                        Sin grupos recuperados
+                    </div>
+                    <div class="d-flex flex-wrap gap-2" th:if="${!#lists.isEmpty(oauthGroups)}">
+                        <span class="badge text-bg-secondary" th:each="group : ${oauthGroups}" th:text="${group}"></span>
+                    </div>
                 </div>
             </div>
 

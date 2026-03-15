@@ -10,18 +10,24 @@ import java.util.stream.Collectors;
 
 public record EffectiveAuthSettings(
         AuthMode mode,
+        OAuthProvider oauthProvider,
         String oauthClientId,
         String oauthClientSecret,
+        OAuthClientAuthenticationMethod oauthClientAuthenticationMethod,
         String oauthAuthorizationUri,
         String oauthTokenUri,
         String oauthUserInfoUri,
         String oauthUserNameAttribute,
         String oauthScopes,
         String oauthRedirectUri,
-        String oauthAdminUsers
+        String oauthAdminGroups
 ) {
-    public Set<String> adminUsersLowerCase() {
-        return splitCsv(oauthAdminUsers).stream()
+    public boolean usesGitlabProvider() {
+        return oauthProvider == OAuthProvider.gitlab;
+    }
+
+    public Set<String> adminGroupsLowerCase() {
+        return splitCsv(oauthAdminGroups).stream()
                 .map(value -> value.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
@@ -29,7 +35,7 @@ public record EffectiveAuthSettings(
     public Set<String> oauthScopesSet() {
         Set<String> scopes = splitCsv(oauthScopes);
         if (scopes.isEmpty()) {
-            return Set.of("openid", "profile", "email");
+            return Set.of("profile", "email", "read_user", "read_api");
         }
         return scopes;
     }
