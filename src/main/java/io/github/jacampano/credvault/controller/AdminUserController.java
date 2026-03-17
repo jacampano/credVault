@@ -4,7 +4,7 @@ import io.github.jacampano.credvault.domain.auth.AppUser;
 import io.github.jacampano.credvault.dto.admin.UserAdminForm;
 import io.github.jacampano.credvault.security.AuthMode;
 import io.github.jacampano.credvault.security.AuthSettingsService;
-import io.github.jacampano.credvault.service.AdminTeamService;
+import io.github.jacampano.credvault.service.AdminGroupService;
 import io.github.jacampano.credvault.service.AdminUserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -33,14 +33,14 @@ public class AdminUserController {
     private static final Set<String> ALLOWED_SORTS = Set.of("username", "firstName", "lastName", "email", "enabled", "id");
 
     private final AdminUserService adminUserService;
-    private final AdminTeamService adminTeamService;
+    private final AdminGroupService adminGroupService;
     private final AuthSettingsService authSettingsService;
 
     public AdminUserController(AdminUserService adminUserService,
-                               AdminTeamService adminTeamService,
+                               AdminGroupService adminGroupService,
                                AuthSettingsService authSettingsService) {
         this.adminUserService = adminUserService;
-        this.adminTeamService = adminTeamService;
+        this.adminGroupService = adminGroupService;
         this.authSettingsService = authSettingsService;
     }
 
@@ -81,7 +81,7 @@ public class AdminUserController {
         form.setEnabled(true);
         form.setAppUserRole(true);
         model.addAttribute("form", form);
-        model.addAttribute("availableTeams", adminTeamService.findAllTeamNames());
+        model.addAttribute("availableGroups", adminGroupService.findAllGroupNames());
         return "admin/users/create";
     }
 
@@ -96,7 +96,7 @@ public class AdminUserController {
         }
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("availableTeams", adminTeamService.findAllTeamNames());
+            model.addAttribute("availableGroups", adminGroupService.findAllGroupNames());
             return "admin/users/create";
         }
 
@@ -106,7 +106,7 @@ public class AdminUserController {
             return "redirect:/admin/users";
         } catch (IllegalArgumentException ex) {
             bindingResult.reject("business", ex.getMessage());
-            model.addAttribute("availableTeams", adminTeamService.findAllTeamNames());
+            model.addAttribute("availableGroups", adminGroupService.findAllGroupNames());
             return "admin/users/create";
         }
     }
@@ -117,9 +117,13 @@ public class AdminUserController {
                            RedirectAttributes redirectAttributes) {
         try {
             AppUser user = adminUserService.findById(id);
+            if (user.isExternallyManaged()) {
+                redirectAttributes.addFlashAttribute("error", "No puedes editar un usuario gestionado por " + user.getIdentitySourceLabel());
+                return "redirect:/admin/users";
+            }
             model.addAttribute("form", adminUserService.toForm(user));
             model.addAttribute("userId", id);
-            model.addAttribute("availableTeams", adminTeamService.findAllTeamNames());
+            model.addAttribute("availableGroups", adminGroupService.findAllGroupNames());
             return "admin/users/edit";
         } catch (EntityNotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());
@@ -136,7 +140,7 @@ public class AdminUserController {
                              RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("userId", id);
-            model.addAttribute("availableTeams", adminTeamService.findAllTeamNames());
+            model.addAttribute("availableGroups", adminGroupService.findAllGroupNames());
             return "admin/users/edit";
         }
 
@@ -147,7 +151,7 @@ public class AdminUserController {
         } catch (IllegalArgumentException ex) {
             bindingResult.reject("business", ex.getMessage());
             model.addAttribute("userId", id);
-            model.addAttribute("availableTeams", adminTeamService.findAllTeamNames());
+            model.addAttribute("availableGroups", adminGroupService.findAllGroupNames());
             return "admin/users/edit";
         } catch (EntityNotFoundException ex) {
             redirectAttributes.addFlashAttribute("error", ex.getMessage());

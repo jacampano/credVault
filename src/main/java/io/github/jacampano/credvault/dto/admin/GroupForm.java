@@ -3,7 +3,7 @@ package io.github.jacampano.credvault.dto.admin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public class TeamForm {
+public class GroupForm {
 
     @NotBlank
     @Size(max = 120)

@@ -53,29 +53,29 @@ public class CredentialService {
         return appEnvironmentRepository.findAllByOrderByNameAsc();
     }
 
-    public List<Credential> findAllVisibleForUser(String username, Set<String> teams) {
-        Set<String> normalizedTeams = normalizeTeams(teams);
-        if (normalizedTeams.isEmpty()) {
+    public List<Credential> findAllVisibleForUser(String username, Set<String> groups) {
+        Set<String> normalizedGroups = normalizeGroups(groups);
+        if (normalizedGroups.isEmpty()) {
             return credentialRepository.findByCreatedByAndDeletedFalseOrderByUpdatedAtDesc(username);
         }
-        return credentialRepository.findVisibleForUser(username, normalizedTeams);
+        return credentialRepository.findVisibleForUser(username, normalizedGroups);
     }
 
-    public Credential findByIdVisibleForUser(Long id, String username, Set<String> teams) {
-        Set<String> normalizedTeams = normalizeTeams(teams);
-        if (normalizedTeams.isEmpty()) {
+    public Credential findByIdVisibleForUser(Long id, String username, Set<String> groups) {
+        Set<String> normalizedGroups = normalizeGroups(groups);
+        if (normalizedGroups.isEmpty()) {
             return credentialRepository.findByIdAndCreatedByAndDeletedFalse(id, username)
                     .orElseThrow(() -> new EntityNotFoundException("Credencial no encontrada: " + id));
         }
-        return credentialRepository.findVisibleByIdForUser(id, username, normalizedTeams)
+        return credentialRepository.findVisibleByIdForUser(id, username, normalizedGroups)
                 .orElseThrow(() -> new EntityNotFoundException("Credencial no encontrada: " + id));
     }
 
-    public Set<String> normalizeTeams(Set<String> teams) {
-        if (teams == null) {
+    public Set<String> normalizeGroups(Set<String> groups) {
+        if (groups == null) {
             return Set.of();
         }
-        return teams.stream()
+        return groups.stream()
                 .filter(StringUtils::hasText)
                 .map(String::trim)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -155,7 +155,7 @@ public class CredentialService {
         form.setEnvironmentId(credential.getEnvironment().getId());
         form.setSystemName(credential.getInformationComponent().getInformationSystem().getName());
         form.setType(credential.getType());
-        form.setSelectedTeams(new LinkedHashSet<>(credential.getTeams()));
+        form.setSelectedGroups(new LinkedHashSet<>(credential.getGroups()));
         form.setShared(credential.isShared());
         form.setNotes(credential.getNotes());
         getHandler(credential.getType()).fillForm(credential, form);
@@ -176,10 +176,10 @@ public class CredentialService {
         credential.setInformationComponent(component);
         credential.setEnvironment(environment);
         credential.setType(form.getType());
-        Set<String> selectedTeams = normalizeTeams(form.getSelectedTeams());
-        credential.setTeams(selectedTeams);
-        credential.setShared(!selectedTeams.isEmpty());
-        form.setShared(!selectedTeams.isEmpty());
+        Set<String> selectedGroups = normalizeGroups(form.getSelectedGroups());
+        credential.setGroups(selectedGroups);
+        credential.setShared(!selectedGroups.isEmpty());
+        form.setShared(!selectedGroups.isEmpty());
         form.setSystemName(component.getInformationSystem().getName());
         credential.setNotes(StringUtils.hasText(form.getNotes()) ? form.getNotes().trim() : null);
         getHandler(form.getType()).applyToCredential(form, credential);
@@ -192,7 +192,7 @@ public class CredentialService {
         history.setIdentifier(credential.getIdentifier());
         history.setCreatedBy(credential.getCreatedBy());
         history.setType(credential.getType());
-        history.setTeams(new LinkedHashSet<>(credential.getTeams()));
+        history.setGroups(new LinkedHashSet<>(credential.getGroups()));
         history.setShared(credential.isShared());
         history.setWebUsername(credential.getWebUsername());
         history.setWebPassword(credential.getWebPassword());

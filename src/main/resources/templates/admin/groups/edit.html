@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Editar equipo | Administración</title>
+    <title>Editar grupo | Administración</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,11 +30,11 @@
     </header>
 
     <section class="app-hero mb-4">
-        <h1 class="app-title h2 mb-1">Editar equipo</h1>
+        <h1 class="app-title h2 mb-1">Editar grupo</h1>
     </section>
 
     <div class="app-card p-4">
-        <form th:object="${form}" th:action="@{/admin/teams/{id}(id=${teamId})}" method="post">
+        <form th:object="${form}" th:action="@{/admin/groups/{id}(id=${groupId})}" method="post">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
             <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}" th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
             <div class="row g-3">
@@ -49,11 +49,11 @@
                     <div class="text-danger small" th:errors="*{description}"></div>
                 </div>
             </div>
-            <button class="btn btn-primary mt-4" type="submit">Guardar equipo</button>
+            <button class="btn btn-primary mt-4" type="submit">Guardar grupo</button>
         </form>
     </div>
 
-    <a class="app-link d-inline-block mt-3" th:href="@{/admin/teams}"><i class="bi bi-arrow-left-short"></i> Volver a equipos</a>
+    <a class="app-link d-inline-block mt-3" th:href="@{/admin/groups}"><i class="bi bi-arrow-left-short"></i> Volver a grupos</a>
 </div>
 </body>
 </html>

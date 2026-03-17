@@ -14,6 +14,13 @@ class AuditActionClassifierTest {
     }
 
     @Test
+    void classifyCredentialsCopyRoute() {
+        AuditActionClassifier.AuditRoute route = AuditActionClassifier.classify("POST", "/credentials/25/copy");
+        assertThat(route.section()).isEqualTo("credentials");
+        assertThat(route.action()).isEqualTo("copy_credential_value");
+    }
+
+    @Test
     void classifyAdminUsersUpdateRoute() {
         AuditActionClassifier.AuditRoute route = AuditActionClassifier.classify("POST", "/admin/users/12");
         assertThat(route.section()).isEqualTo("admin/users");
@@ -21,10 +28,10 @@ class AuditActionClassifierTest {
     }
 
     @Test
-    void classifyAdminTeamsDeleteRoute() {
-        AuditActionClassifier.AuditRoute route = AuditActionClassifier.classify("POST", "/admin/teams/9/delete");
-        assertThat(route.section()).isEqualTo("admin/teams");
-        assertThat(route.action()).isEqualTo("delete_team");
+    void classifyAdminGroupsDeleteRoute() {
+        AuditActionClassifier.AuditRoute route = AuditActionClassifier.classify("POST", "/admin/groups/9/delete");
+        assertThat(route.section()).isEqualTo("admin/groups");
+        assertThat(route.action()).isEqualTo("delete_group");
     }
 
     @Test

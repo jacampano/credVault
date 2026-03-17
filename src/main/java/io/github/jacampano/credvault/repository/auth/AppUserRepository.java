@@ -23,6 +23,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
             Pageable pageable
     );
 
-    @Query("select count(u) from AppUser u join u.teams t where t = :team")
-    long countMembersByTeam(@Param("team") String team);
+    @Query("select count(u) from AppUser u join u.groups g where g = :group")
+    long countMembersByGroup(@Param("group") String group);
 }

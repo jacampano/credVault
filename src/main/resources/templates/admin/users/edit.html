@@ -65,11 +65,11 @@
                     <input class="form-control" type="password" th:field="*{newPassword}">
                 </div>
                 <div class="col-12">
-                    <label class="form-label">Equipos</label>
-                    <select class="form-select" multiple size="6" th:field="*{selectedTeams}">
-                        <option th:each="team : ${availableTeams}" th:value="${team}" th:text="${team}"></option>
+                    <label class="form-label">Grupos</label>
+                    <select class="form-select" multiple size="6" th:field="*{selectedGroups}">
+                        <option th:each="group : ${availableGroups}" th:value="${group}" th:text="${group}"></option>
                     </select>
-                    <div class="form-text">Selecciona uno o varios equipos.</div>
+                    <div class="form-text">Selecciona uno o varios grupos.</div>
                 </div>
                 <div class="col-md-6 d-flex align-items-center gap-4 mt-md-5">
                     <div class="form-check">

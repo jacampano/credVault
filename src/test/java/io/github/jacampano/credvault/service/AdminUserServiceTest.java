@@ -2,10 +2,11 @@ package io.github.jacampano.credvault.service;
 
 import io.github.jacampano.credvault.domain.auth.AppRole;
 import io.github.jacampano.credvault.domain.auth.AppUser;
-import io.github.jacampano.credvault.domain.auth.Team;
+import io.github.jacampano.credvault.domain.auth.Group;
+import io.github.jacampano.credvault.domain.auth.UserIdentitySource;
 import io.github.jacampano.credvault.dto.admin.UserAdminForm;
 import io.github.jacampano.credvault.repository.auth.AppUserRepository;
-import io.github.jacampano.credvault.repository.auth.TeamRepository;
+import io.github.jacampano.credvault.repository.auth.GroupRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +39,7 @@ class AdminUserServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private TeamRepository teamRepository;
+    private GroupRepository groupRepository;
 
     @InjectMocks
     private AdminUserService adminUserService;
@@ -88,11 +89,11 @@ class AdminUserServiceTest {
         form.setAppUserRole(true);
         form.setAdminRole(true);
         form.setNewPassword("new-pass");
-        form.setSelectedTeams(Set.of("SECOPS"));
+        form.setSelectedGroups(Set.of("SECOPS"));
 
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
         when(appUserRepository.existsByUsernameAndIdNot("newuser", 1L)).thenReturn(false);
-        when(teamRepository.findAllByOrderByNameAsc()).thenReturn(List.of(team("SECOPS")));
+        when(groupRepository.findAllByOrderByNameAsc()).thenReturn(List.of(group("SECOPS")));
         when(passwordEncoder.encode("new-pass")).thenReturn("encoded-pass");
 
         adminUserService.updateUser(1L, form, "other-admin");
@@ -120,10 +121,10 @@ class AdminUserServiceTest {
         form.setAppUserRole(true);
         form.setAdminRole(false);
         form.setNewPassword(" secret ");
-        form.setSelectedTeams(Set.of("DEVOPS", "BACKOFFICE"));
+        form.setSelectedGroups(Set.of("DEVOPS", "BACKOFFICE"));
 
         when(appUserRepository.existsByUsername("new.user")).thenReturn(false);
-        when(teamRepository.findAllByOrderByNameAsc()).thenReturn(List.of(team("BACKOFFICE"), team("DEVOPS")));
+        when(groupRepository.findAllByOrderByNameAsc()).thenReturn(List.of(group("BACKOFFICE"), group("DEVOPS")));
         when(passwordEncoder.encode("secret")).thenReturn("encoded");
 
         adminUserService.createUser(form);
@@ -137,7 +138,7 @@ class AdminUserServiceTest {
         assertThat(saved.getEmail()).isEqualTo("ana@acme.test");
         assertThat(saved.isEnabled()).isTrue();
         assertThat(saved.getRoles()).containsExactly(AppRole.APP_USER);
-        assertThat(saved.getTeams()).containsExactlyInAnyOrder("DEVOPS", "BACKOFFICE");
+        assertThat(saved.getGroups()).containsExactlyInAnyOrder("DEVOPS", "BACKOFFICE");
         assertThat(saved.getPasswordHash()).isEqualTo("encoded");
     }
 
@@ -147,7 +148,7 @@ class AdminUserServiceTest {
         form.setUsername("dup");
         form.setAppUserRole(true);
         form.setNewPassword("x");
-        form.setSelectedTeams(Set.of("TEAM1"));
+        form.setSelectedGroups(Set.of("TEAM1"));
 
         when(appUserRepository.existsByUsername("dup")).thenReturn(true);
 
@@ -163,7 +164,7 @@ class AdminUserServiceTest {
         form.setAppUserRole(false);
         form.setAdminRole(false);
         form.setNewPassword("x");
-        form.setSelectedTeams(Set.of("TEAM1"));
+        form.setSelectedGroups(Set.of("TEAM1"));
         when(appUserRepository.existsByUsername("new")).thenReturn(false);
 
         assertThatThrownBy(() -> adminUserService.createUser(form))
@@ -177,9 +178,9 @@ class AdminUserServiceTest {
         form.setUsername("new");
         form.setAppUserRole(true);
         form.setNewPassword(" ");
-        form.setSelectedTeams(Set.of("TEAM1"));
+        form.setSelectedGroups(Set.of("TEAM1"));
         when(appUserRepository.existsByUsername("new")).thenReturn(false);
-        when(teamRepository.findAllByOrderByNameAsc()).thenReturn(List.of(team("TEAM1")));
+        when(groupRepository.findAllByOrderByNameAsc()).thenReturn(List.of(group("TEAM1")));
 
         assertThatThrownBy(() -> adminUserService.createUser(form))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -187,28 +188,28 @@ class AdminUserServiceTest {
     }
 
     @Test
-    void createUserFailsWhenTeamsMissing() {
+    void createUserFailsWhenGroupsMissing() {
         UserAdminForm form = new UserAdminForm();
         form.setUsername("new");
         form.setAppUserRole(true);
         form.setNewPassword("x");
-        form.setSelectedTeams(Set.of());
+        form.setSelectedGroups(Set.of());
         when(appUserRepository.existsByUsername("new")).thenReturn(false);
 
         assertThatThrownBy(() -> adminUserService.createUser(form))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("al menos a un equipo");
+                .hasMessageContaining("al menos a un grupo");
     }
 
     @Test
-    void createUserFailsWhenSelectingUnknownTeam() {
+    void createUserFailsWhenSelectingUnknownGroup() {
         UserAdminForm form = new UserAdminForm();
         form.setUsername("new");
         form.setAppUserRole(true);
         form.setNewPassword("x");
-        form.setSelectedTeams(Set.of("TEAM-X"));
+        form.setSelectedGroups(Set.of("TEAM-X"));
         when(appUserRepository.existsByUsername("new")).thenReturn(false);
-        when(teamRepository.findAllByOrderByNameAsc()).thenReturn(List.of(team("TEAM-1")));
+        when(groupRepository.findAllByOrderByNameAsc()).thenReturn(List.of(group("TEAM-1")));
 
         assertThatThrownBy(() -> adminUserService.createUser(form))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -222,7 +223,7 @@ class AdminUserServiceTest {
         form.setUsername("duplicado");
         form.setAppUserRole(true);
         form.setEnabled(true);
-        form.setSelectedTeams(Set.of("TEAM1"));
+        form.setSelectedGroups(Set.of("TEAM1"));
 
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
         when(appUserRepository.existsByUsernameAndIdNot("duplicado", 1L)).thenReturn(true);
@@ -235,6 +236,24 @@ class AdminUserServiceTest {
     }
 
     @Test
+    void updateUserFailsWhenUserIsExternallyManaged() {
+        AppUser user = user(1L, "oauth.user", true, Set.of(AppRole.APP_USER));
+        user.setIdentitySource(UserIdentitySource.OAUTH);
+        UserAdminForm form = new UserAdminForm();
+        form.setUsername("oauth.user");
+        form.setEnabled(true);
+        form.setAppUserRole(true);
+        form.setSelectedGroups(Set.of("TEAM1"));
+
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> adminUserService.updateUser(1L, form, "admin"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("gestionado por OAUTH");
+        verify(appUserRepository, never()).save(any());
+    }
+
+    @Test
     void updateUserFailsWhenNoRolesSelected() {
         AppUser user = user(1L, "old", true, Set.of(AppRole.APP_USER));
         UserAdminForm form = new UserAdminForm();
@@ -242,7 +261,7 @@ class AdminUserServiceTest {
         form.setEnabled(true);
         form.setAppUserRole(false);
         form.setAdminRole(false);
-        form.setSelectedTeams(Set.of("TEAM1"));
+        form.setSelectedGroups(Set.of("TEAM1"));
 
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
         when(appUserRepository.existsByUsernameAndIdNot("user", 1L)).thenReturn(false);
@@ -260,11 +279,11 @@ class AdminUserServiceTest {
         form.setEnabled(true);
         form.setAppUserRole(true);
         form.setAdminRole(false);
-        form.setSelectedTeams(Set.of("TEAM1"));
+        form.setSelectedGroups(Set.of("TEAM1"));
 
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
         when(appUserRepository.existsByUsernameAndIdNot("admin", 1L)).thenReturn(false);
-        when(teamRepository.findAllByOrderByNameAsc()).thenReturn(List.of(team("TEAM1")));
+        when(groupRepository.findAllByOrderByNameAsc()).thenReturn(List.of(group("TEAM1")));
         when(appUserRepository.findAll()).thenReturn(List.of(user));
 
         assertThatThrownBy(() -> adminUserService.updateUser(1L, form, "otro"))
@@ -280,11 +299,11 @@ class AdminUserServiceTest {
         form.setEnabled(false);
         form.setAppUserRole(true);
         form.setAdminRole(true);
-        form.setSelectedTeams(Set.of("TEAM1"));
+        form.setSelectedGroups(Set.of("TEAM1"));
 
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
         when(appUserRepository.existsByUsernameAndIdNot("admin", 1L)).thenReturn(false);
-        when(teamRepository.findAllByOrderByNameAsc()).thenReturn(List.of(team("TEAM1")));
+        when(groupRepository.findAllByOrderByNameAsc()).thenReturn(List.of(group("TEAM1")));
 
         assertThatThrownBy(() -> adminUserService.updateUser(1L, form, "admin"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -314,6 +333,17 @@ class AdminUserServiceTest {
     }
 
     @Test
+    void toggleUserStatusFailsWhenUserIsExternallyManaged() {
+        AppUser user = user(1L, "oauth.user", true, Set.of(AppRole.APP_USER));
+        user.setIdentitySource(UserIdentitySource.OAUTH);
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> adminUserService.toggleUserStatus(1L, "admin"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("gestionado por OAUTH");
+    }
+
+    @Test
     void deleteUserFailsWhenSelfDelete() {
         AppUser user = user(1L, "admin", true, Set.of(AppRole.ADMIN));
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -337,6 +367,18 @@ class AdminUserServiceTest {
     }
 
     @Test
+    void deleteUserFailsWhenUserIsExternallyManaged() {
+        AppUser user = user(1L, "oauth.user", true, Set.of(AppRole.APP_USER));
+        user.setIdentitySource(UserIdentitySource.OAUTH);
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> adminUserService.deleteUser(1L, "admin"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("gestionado por OAUTH");
+        verify(appUserRepository, never()).delete(any());
+    }
+
+    @Test
     void deleteUserDeletesWhenAllowed() {
         AppUser user = user(1L, "user", true, Set.of(AppRole.APP_USER));
         when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -355,9 +397,9 @@ class AdminUserServiceTest {
         return user;
     }
 
-    private Team team(String name) {
-        Team team = new Team();
-        team.setName(name);
-        return team;
+    private Group group(String name) {
+        Group group = new Group();
+        group.setName(name);
+        return group;
     }
 }

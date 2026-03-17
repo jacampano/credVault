@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gestión de equipos | Administración</title>
+    <title>Gestión de grupos | Administración</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,12 +30,15 @@
     </header>
 
     <section class="app-hero mb-4">
-        <h1 class="app-title h2 mb-1">Gestión de equipos</h1>
-        <p class="app-subtitle">Crea, edita y elimina equipos de la aplicación.</p>
+        <h1 class="app-title h2 mb-1">Gestión de grupos</h1>
+        <p class="app-subtitle">Crea, edita y elimina grupos de la aplicación.</p>
     </section>
 
     <div class="alert alert-success" th:if="${message}" th:text="${message}"></div>
     <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+    <div class="alert alert-info" th:if="${oauthManaged}">
+        Modo OAuth activo: no se pueden crear nuevos grupos. Solo los grupos manuales pueden editarse/eliminarse.
+    </div>
 
     <div class="app-card app-table-wrap mb-3">
         <div class="table-responsive">
@@ -44,30 +47,36 @@
                 <tr>
                     <th>Nombre</th>
                     <th>Descripción</th>
+                    <th>Origen</th>
                     <th class="text-end">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:if="${#lists.isEmpty(teams)}">
-                    <td colspan="3" class="text-center py-4">No hay equipos registrados</td>
+                <tr th:if="${#lists.isEmpty(groups)}">
+                    <td colspan="4" class="text-center py-4">No hay grupos registrados</td>
                 </tr>
-                <tr th:each="team : ${teams}">
-                    <td class="fw-semibold" th:text="${team.name}"></td>
-                    <td th:text="${team.description}"></td>
-                    <td class="text-end">
-                        <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/teams/{id}/edit(id=${team.id})}">Editar</a>
-                        <form class="d-inline" th:action="@{/admin/teams/{id}/delete(id=${team.id})}" method="post">
+                <tr th:each="group : ${groups}">
+                    <td class="fw-semibold" th:text="${group.name}"></td>
+                    <td th:text="${group.description}"></td>
+                    <td>
+                        <span class="badge bg-info-subtle text-info-emphasis" th:if="${group.oauthSynchronized}">OAuth</span>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis" th:if="${!group.oauthSynchronized}">Manual</span>
+                    </td>
+                    <td class="text-end" th:if="${!oauthManaged or !group.oauthSynchronized}">
+                        <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/groups/{id}/edit(id=${group.id})}">Editar</a>
+                        <form class="d-inline" th:action="@{/admin/groups/{id}/delete(id=${group.id})}" method="post">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                             <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
                         </form>
                     </td>
+                    <td class="text-end text-muted small" th:if="${oauthManaged and group.oauthSynchronized}">Bloqueado por OAuth</td>
                 </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <a class="btn btn-primary" th:href="@{/admin/teams/new}">Nuevo equipo</a>
+    <a class="btn btn-primary" th:if="${!oauthManaged}" th:href="@{/admin/groups/new}">Nuevo grupo</a>
     <a class="app-link d-inline-block mt-3 ms-3" th:href="@{/admin}"><i class="bi bi-arrow-left-short"></i> Volver a administración</a>
 </div>
 </body>

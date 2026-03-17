@@ -42,6 +42,10 @@ public class AppUser {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private UserIdentitySource identitySource = UserIdentitySource.LOCAL;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "app_user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
@@ -49,9 +53,9 @@ public class AppUser {
     private Set<AppRole> roles = new HashSet<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "app_user_teams", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "team", nullable = false, length = 120)
-    private Set<String> teams = new HashSet<>();
+    @CollectionTable(name = "app_user_groups", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "group_name", nullable = false, length = 120)
+    private Set<String> groups = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -117,11 +121,27 @@ public class AppUser {
         this.roles = roles;
     }
 
-    public Set<String> getTeams() {
-        return teams;
+    public Set<String> getGroups() {
+        return groups;
     }
 
-    public void setTeams(Set<String> teams) {
-        this.teams = teams;
+    public void setGroups(Set<String> groups) {
+        this.groups = groups;
+    }
+
+    public UserIdentitySource getIdentitySource() {
+        return identitySource == null ? UserIdentitySource.LOCAL : identitySource;
+    }
+
+    public void setIdentitySource(UserIdentitySource identitySource) {
+        this.identitySource = identitySource;
+    }
+
+    public boolean isExternallyManaged() {
+        return getIdentitySource() != UserIdentitySource.LOCAL;
+    }
+
+    public String getIdentitySourceLabel() {
+        return getIdentitySource().name();
     }
 }

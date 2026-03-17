@@ -15,23 +15,23 @@ public interface CredentialRepository extends JpaRepository<Credential, Long> {
     @Query("""
             select distinct c
             from Credential c
-            left join c.teams t
-            where c.deleted = false and (c.createdBy = :username or t in :teams)
+            left join c.groups t
+            where c.deleted = false and (c.createdBy = :username or t in :groups)
             order by c.updatedAt desc
             """)
-    List<Credential> findVisibleForUser(@Param("username") String username, @Param("teams") Collection<String> teams);
+    List<Credential> findVisibleForUser(@Param("username") String username, @Param("groups") Collection<String> groups);
 
     Optional<Credential> findByIdAndCreatedByAndDeletedFalse(Long id, String createdBy);
 
     @Query("""
             select distinct c
             from Credential c
-            left join c.teams t
-            where c.id = :id and c.deleted = false and (c.createdBy = :username or t in :teams)
+            left join c.groups t
+            where c.id = :id and c.deleted = false and (c.createdBy = :username or t in :groups)
             """)
     Optional<Credential> findVisibleByIdForUser(@Param("id") Long id,
                                                 @Param("username") String username,
-                                                @Param("teams") Collection<String> teams);
+                                                @Param("groups") Collection<String> groups);
 
     Optional<Credential> findByIdAndDeletedFalse(Long id);
 

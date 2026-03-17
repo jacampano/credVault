@@ -51,9 +51,9 @@ public class CredentialHistory {
     private CredentialType type = CredentialType.WEB_USER_PASSWORD;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "credential_history_teams", joinColumns = @JoinColumn(name = "history_id"))
-    @Column(name = "team", nullable = false, length = 120)
-    private Set<String> teams = new HashSet<>();
+    @CollectionTable(name = "credential_history_groups", joinColumns = @JoinColumn(name = "history_id"))
+    @Column(name = "group_name", nullable = false, length = 120)
+    private Set<String> groups = new HashSet<>();
 
     @Column(nullable = false)
     private boolean shared;
@@ -147,12 +147,12 @@ public class CredentialHistory {
         this.type = type;
     }
 
-    public Set<String> getTeams() {
-        return teams;
+    public Set<String> getGroups() {
+        return groups;
     }
 
-    public void setTeams(Set<String> teams) {
-        this.teams = teams;
+    public void setGroups(Set<String> groups) {
+        this.groups = groups;
     }
 
     public boolean isShared() {

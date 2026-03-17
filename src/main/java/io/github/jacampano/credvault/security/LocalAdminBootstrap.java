@@ -2,9 +2,9 @@ package io.github.jacampano.credvault.security;
 
 import io.github.jacampano.credvault.domain.auth.AppRole;
 import io.github.jacampano.credvault.domain.auth.AppUser;
-import io.github.jacampano.credvault.domain.auth.Team;
+import io.github.jacampano.credvault.domain.auth.Group;
 import io.github.jacampano.credvault.repository.auth.AppUserRepository;
-import io.github.jacampano.credvault.repository.auth.TeamRepository;
+import io.github.jacampano.credvault.repository.auth.GroupRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -21,18 +21,18 @@ public class LocalAdminBootstrap implements CommandLineRunner {
     private final AuthSettingsService authSettingsService;
     private final AuthProperties authProperties;
     private final AppUserRepository appUserRepository;
-    private final TeamRepository teamRepository;
+    private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
 
     public LocalAdminBootstrap(AuthSettingsService authSettingsService,
                                AuthProperties authProperties,
                                AppUserRepository appUserRepository,
-                               TeamRepository teamRepository,
+                               GroupRepository groupRepository,
                                PasswordEncoder passwordEncoder) {
         this.authSettingsService = authSettingsService;
         this.authProperties = authProperties;
         this.appUserRepository = appUserRepository;
-        this.teamRepository = teamRepository;
+        this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -56,25 +56,25 @@ public class LocalAdminBootstrap implements CommandLineRunner {
         appUserRepository.findByUsername(username).ifPresentOrElse(existing ->
                         LOG.info("Usuario admin local ya existente: {}", username),
                 () -> {
-                    ensureAdminTeamExists();
+                    ensureAdminGroupExists();
                     AppUser admin = new AppUser();
                     admin.setUsername(username);
                     admin.setPasswordHash(passwordEncoder.encode(password));
                     admin.setRoles(Set.of(AppRole.APP_USER, AppRole.ADMIN));
-                    admin.setTeams(Set.of("ADMIN"));
+                    admin.setGroups(Set.of("ADMIN"));
                     admin.setEnabled(true);
                     appUserRepository.save(admin);
                     LOG.info("Usuario admin local creado: {}", username);
                 });
     }
 
-    private void ensureAdminTeamExists() {
-        if (teamRepository.existsByNameIgnoreCase("ADMIN")) {
+    private void ensureAdminGroupExists() {
+        if (groupRepository.existsByNameIgnoreCase("ADMIN")) {
             return;
         }
-        Team team = new Team();
-        team.setName("ADMIN");
-        team.setDescription("Equipo administrativo");
-        teamRepository.save(team);
+        Group group = new Group();
+        group.setName("ADMIN");
+        group.setDescription("Grupo administrativo");
+        groupRepository.save(group);
     }
 }

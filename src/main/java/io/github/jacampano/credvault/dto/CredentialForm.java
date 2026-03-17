@@ -30,7 +30,7 @@ public class CredentialForm {
     @NotNull
     private CredentialType type = CredentialType.WEB_USER_PASSWORD;
 
-    private Set<String> selectedTeams = new LinkedHashSet<>();
+    private Set<String> selectedGroups = new LinkedHashSet<>();
 
     private boolean shared;
 
@@ -104,12 +104,12 @@ public class CredentialForm {
         this.type = type;
     }
 
-    public Set<String> getSelectedTeams() {
-        return selectedTeams;
+    public Set<String> getSelectedGroups() {
+        return selectedGroups;
     }
 
-    public void setSelectedTeams(Set<String> selectedTeams) {
-        this.selectedTeams = selectedTeams == null ? new LinkedHashSet<>() : selectedTeams;
+    public void setSelectedGroups(Set<String> selectedGroups) {
+        this.selectedGroups = selectedGroups == null ? new LinkedHashSet<>() : selectedGroups;
     }
 
     public boolean isShared() {

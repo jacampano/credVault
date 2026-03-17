@@ -27,7 +27,7 @@ public class UserAdminForm {
     private boolean appUserRole;
     private boolean adminRole;
 
-    private Set<String> selectedTeams = new LinkedHashSet<>();
+    private Set<String> selectedGroups = new LinkedHashSet<>();
 
     @Size(max = 120)
     private String newPassword;
@@ -96,11 +96,11 @@ public class UserAdminForm {
         this.newPassword = newPassword;
     }
 
-    public Set<String> getSelectedTeams() {
-        return selectedTeams;
+    public Set<String> getSelectedGroups() {
+        return selectedGroups;
     }
 
-    public void setSelectedTeams(Set<String> selectedTeams) {
-        this.selectedTeams = selectedTeams == null ? new LinkedHashSet<>() : selectedTeams;
+    public void setSelectedGroups(Set<String> selectedGroups) {
+        this.selectedGroups = selectedGroups == null ? new LinkedHashSet<>() : selectedGroups;
     }
 }

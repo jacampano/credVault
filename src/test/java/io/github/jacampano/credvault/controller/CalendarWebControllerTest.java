@@ -39,8 +39,8 @@ class CalendarWebControllerTest {
     @Test
     void viewBuildsCalendarAndUpcomingExpirations() {
         when(authentication.getName()).thenReturn("ana");
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
 
         LocalDate today = LocalDate.now();
         Credential tokenSoon = tokenCredential("api-token", today.plusDays(2), false);
@@ -69,8 +69,8 @@ class CalendarWebControllerTest {
     @Test
     void viewFallsBackToCurrentMonthWhenParamsInvalid() {
         when(authentication.getName()).thenReturn("ana");
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of());
-        when(credentialService.normalizeTeams(Set.of())).thenReturn(Set.of());
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of());
+        when(credentialService.normalizeGroups(Set.of())).thenReturn(Set.of());
         when(credentialService.findAllVisibleForUser("ana", Set.of())).thenReturn(List.of());
         Model model = new ExtendedModelMap();
 

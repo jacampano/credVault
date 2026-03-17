@@ -3,6 +3,7 @@ package io.github.jacampano.credvault.security;
 import io.github.jacampano.credvault.domain.config.AuthSettings;
 import io.github.jacampano.credvault.dto.admin.AuthenticationSettingsForm;
 import io.github.jacampano.credvault.repository.config.AuthSettingsRepository;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -25,54 +26,85 @@ public class AuthSettingsService {
 
     private final AuthProperties authProperties;
     private final AuthSettingsRepository authSettingsRepository;
+    private final Environment environment;
 
     public AuthSettingsService(AuthProperties authProperties,
-                               AuthSettingsRepository authSettingsRepository) {
+                               AuthSettingsRepository authSettingsRepository,
+                               Environment environment) {
         this.authProperties = authProperties;
         this.authSettingsRepository = authSettingsRepository;
+        this.environment = environment;
     }
 
     @Transactional(readOnly = true)
     public EffectiveAuthSettings loadEffectiveSettings() {
         AuthSettings stored = findStoredSettings().orElse(null);
 
-        AuthMode mode = resolveMode(firstNonBlank(authProperties.getMode(), stored != null ? stored.getMode().name() : null));
+        String modeValue = envOrProperty("APP_AUTH_MODE", authProperties.getMode());
+        AuthMode mode = resolveMode(firstNonBlank(modeValue, stored != null ? stored.getMode().name() : null));
         OAuthProvider provider = resolveProvider(firstNonBlank(
-                authProperties.getOauthProvider(),
+                envOrProperty("APP_AUTH_OAUTH_PROVIDER", authProperties.getOauthProvider()),
                 stored != null && stored.getOauthProvider() != null ? stored.getOauthProvider().name() : null
         ));
         String oauthGitlabBaseUrl = firstNonBlank(
-                authProperties.getOauthGitlabBaseUrl(),
+                envOrProperty("APP_AUTH_OAUTH_GITLAB_BASE_URL", authProperties.getOauthGitlabBaseUrl()),
                 stored != null ? stored.getOauthGitlabBaseUrl() : null
         );
         OAuthClientAuthenticationMethod oauthClientAuthenticationMethod = resolveClientAuthenticationMethod(firstNonBlank(
-                authProperties.getOauthClientAuthenticationMethod(),
+                envOrProperty("APP_AUTH_OAUTH_CLIENT_AUTHENTICATION_METHOD", authProperties.getOauthClientAuthenticationMethod()),
                 stored != null && stored.getOauthClientAuthenticationMethod() != null ? stored.getOauthClientAuthenticationMethod().name() : null
         ));
-        String oauthAuthorizationUri = firstNonBlank(authProperties.getOauthAuthorizationUri(), stored != null ? stored.getOauthAuthorizationUri() : null);
-        String oauthTokenUri = firstNonBlank(authProperties.getOauthTokenUri(), stored != null ? stored.getOauthTokenUri() : null);
-        String oauthUserInfoUri = firstNonBlank(authProperties.getOauthUserInfoUri(), stored != null ? stored.getOauthUserInfoUri() : null);
+        String oauthAuthorizationUri = firstNonBlank(
+                envOrProperty("APP_AUTH_OAUTH_AUTHORIZATION_URI", authProperties.getOauthAuthorizationUri()),
+                stored != null ? stored.getOauthAuthorizationUri() : null
+        );
+        String oauthTokenUri = firstNonBlank(
+                envOrProperty("APP_AUTH_OAUTH_TOKEN_URI", authProperties.getOauthTokenUri()),
+                stored != null ? stored.getOauthTokenUri() : null
+        );
+        String oauthUserInfoUri = firstNonBlank(
+                envOrProperty("APP_AUTH_OAUTH_USER_INFO_URI", authProperties.getOauthUserInfoUri()),
+                stored != null ? stored.getOauthUserInfoUri() : null
+        );
         if (provider == OAuthProvider.gitlab) {
             String baseUrl = normalizeGitlabBaseUrl(firstNonBlank(oauthGitlabBaseUrl, DEFAULT_GITLAB_BASE_URL));
-            oauthAuthorizationUri = joinUrl(baseUrl, GITLAB_AUTHORIZATION_PATH);
-            oauthTokenUri = joinUrl(baseUrl, GITLAB_TOKEN_PATH);
-            oauthUserInfoUri = joinUrl(baseUrl, GITLAB_USER_INFO_PATH);
+            oauthAuthorizationUri = firstNonBlank(oauthAuthorizationUri, joinUrl(baseUrl, GITLAB_AUTHORIZATION_PATH));
+            oauthTokenUri = firstNonBlank(oauthTokenUri, joinUrl(baseUrl, GITLAB_TOKEN_PATH));
+            oauthUserInfoUri = firstNonBlank(oauthUserInfoUri, joinUrl(baseUrl, GITLAB_USER_INFO_PATH));
             oauthGitlabBaseUrl = baseUrl;
         }
 
         return new EffectiveAuthSettings(
                 mode,
                 provider,
-                firstNonBlank(authProperties.getOauthClientId(), stored != null ? stored.getOauthClientId() : null),
-                firstNonBlank(authProperties.getOauthClientSecret(), stored != null ? stored.getOauthClientSecret() : null),
+                firstNonBlank(
+                        envOrProperty("APP_AUTH_OAUTH_CLIENT_ID", authProperties.getOauthClientId()),
+                        stored != null ? stored.getOauthClientId() : null
+                ),
+                firstNonBlank(
+                        envOrProperty("APP_AUTH_OAUTH_CLIENT_SECRET", authProperties.getOauthClientSecret()),
+                        stored != null ? stored.getOauthClientSecret() : null
+                ),
                 oauthClientAuthenticationMethod,
                 oauthAuthorizationUri,
                 oauthTokenUri,
                 oauthUserInfoUri,
-                firstNonBlank(authProperties.getOauthUserNameAttribute(), stored != null ? stored.getOauthUserNameAttribute() : null),
-                firstNonBlank(authProperties.getOauthScopes(), stored != null ? stored.getOauthScopes() : null),
-                firstNonBlank(authProperties.getOauthRedirectUri(), stored != null ? stored.getOauthRedirectUri() : DEFAULT_REDIRECT_URI),
-                firstNonBlank(authProperties.getOauthAdminGroups(), stored != null ? stored.getOauthAdminGroups() : null)
+                firstNonBlank(
+                        envOrProperty("APP_AUTH_OAUTH_USER_NAME_ATTRIBUTE", authProperties.getOauthUserNameAttribute()),
+                        stored != null ? stored.getOauthUserNameAttribute() : null
+                ),
+                firstNonBlank(
+                        envOrProperty("APP_AUTH_OAUTH_SCOPES", authProperties.getOauthScopes()),
+                        stored != null ? stored.getOauthScopes() : null
+                ),
+                firstNonBlank(
+                        envOrProperty("APP_AUTH_OAUTH_REDIRECT_URI", authProperties.getOauthRedirectUri()),
+                        stored != null ? stored.getOauthRedirectUri() : DEFAULT_REDIRECT_URI
+                ),
+                firstNonBlank(
+                        envOrProperty("APP_AUTH_OAUTH_ADMIN_GROUPS", authProperties.getOauthAdminGroups()),
+                        stored != null ? stored.getOauthAdminGroups() : null
+                )
         );
     }
 
@@ -147,19 +179,19 @@ public class AuthSettingsService {
     @Transactional(readOnly = true)
     public Map<String, String> findActiveEnvironmentOverrides() {
         Map<String, String> overrides = new LinkedHashMap<>();
-        putIfPresent(overrides, "APP_AUTH_MODE", authProperties.getMode());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_PROVIDER", authProperties.getOauthProvider());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_CLIENT_ID", authProperties.getOauthClientId());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_CLIENT_SECRET", maskSecret(authProperties.getOauthClientSecret()));
-        putIfPresent(overrides, "APP_AUTH_OAUTH_CLIENT_AUTHENTICATION_METHOD", authProperties.getOauthClientAuthenticationMethod());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_GITLAB_BASE_URL", authProperties.getOauthGitlabBaseUrl());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_AUTHORIZATION_URI", authProperties.getOauthAuthorizationUri());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_TOKEN_URI", authProperties.getOauthTokenUri());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_USER_INFO_URI", authProperties.getOauthUserInfoUri());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_USER_NAME_ATTRIBUTE", authProperties.getOauthUserNameAttribute());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_SCOPES", authProperties.getOauthScopes());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_REDIRECT_URI", authProperties.getOauthRedirectUri());
-        putIfPresent(overrides, "APP_AUTH_OAUTH_ADMIN_GROUPS", authProperties.getOauthAdminGroups());
+        putIfPresent(overrides, "APP_AUTH_MODE", envOrProperty("APP_AUTH_MODE", authProperties.getMode()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_PROVIDER", envOrProperty("APP_AUTH_OAUTH_PROVIDER", authProperties.getOauthProvider()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_CLIENT_ID", envOrProperty("APP_AUTH_OAUTH_CLIENT_ID", authProperties.getOauthClientId()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_CLIENT_SECRET", maskSecret(envOrProperty("APP_AUTH_OAUTH_CLIENT_SECRET", authProperties.getOauthClientSecret())));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_CLIENT_AUTHENTICATION_METHOD", envOrProperty("APP_AUTH_OAUTH_CLIENT_AUTHENTICATION_METHOD", authProperties.getOauthClientAuthenticationMethod()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_GITLAB_BASE_URL", envOrProperty("APP_AUTH_OAUTH_GITLAB_BASE_URL", authProperties.getOauthGitlabBaseUrl()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_AUTHORIZATION_URI", envOrProperty("APP_AUTH_OAUTH_AUTHORIZATION_URI", authProperties.getOauthAuthorizationUri()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_TOKEN_URI", envOrProperty("APP_AUTH_OAUTH_TOKEN_URI", authProperties.getOauthTokenUri()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_USER_INFO_URI", envOrProperty("APP_AUTH_OAUTH_USER_INFO_URI", authProperties.getOauthUserInfoUri()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_USER_NAME_ATTRIBUTE", envOrProperty("APP_AUTH_OAUTH_USER_NAME_ATTRIBUTE", authProperties.getOauthUserNameAttribute()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_SCOPES", envOrProperty("APP_AUTH_OAUTH_SCOPES", authProperties.getOauthScopes()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_REDIRECT_URI", envOrProperty("APP_AUTH_OAUTH_REDIRECT_URI", authProperties.getOauthRedirectUri()));
+        putIfPresent(overrides, "APP_AUTH_OAUTH_ADMIN_GROUPS", envOrProperty("APP_AUTH_OAUTH_ADMIN_GROUPS", authProperties.getOauthAdminGroups()));
         return overrides;
     }
 
@@ -276,5 +308,13 @@ public class AuthSettingsService {
         if (StringUtils.hasText(value)) {
             map.put(key, value);
         }
+    }
+
+    private String envOrProperty(String envKey, String propertyValue) {
+        String envValue = environment.getProperty(envKey);
+        if (StringUtils.hasText(envValue)) {
+            return envValue.trim();
+        }
+        return propertyValue;
     }
 }

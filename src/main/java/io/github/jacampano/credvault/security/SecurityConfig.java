@@ -121,7 +121,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService(AuthSettingsService authSettingsService) {
+    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService(AuthSettingsService authSettingsService,
+                                                                               OAuthGroupSyncService oauthGroupSyncService) {
         DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
         RestClient restClient = RestClient.builder().build();
 
@@ -141,6 +142,7 @@ public class SecurityConfig {
                     oauth2User.getName(),
                     groupPaths.size(),
                     groupPaths);
+            oauthGroupSyncService.syncUser(oauth2User, groupPaths);
 
             String userNameAttributeName = userRequest.getClientRegistration()
                     .getProviderDetails()

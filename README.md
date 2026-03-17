@@ -77,6 +77,16 @@ Gestión de usuarios (`/admin/users`):
 - En modo `local`, botón `Nuevo usuario` para alta manual con perfil completo y roles.
 - Acciones por usuario: `Editar`, `Activar/Desactivar`, `Eliminar usuario`.
 
+Gestión de grupos (`/admin/groups`):
+
+- En modo `local`: alta, edición y borrado de grupos.
+- En modo `oauth`: no se permite crear grupos nuevos.
+- En modo `oauth`: los grupos manuales sí se pueden editar/eliminar.
+- En modo `oauth`: los grupos sincronizados automáticamente quedan bloqueados para edición/eliminación.
+- Los grupos se sincronizan automáticamente desde GitLab al autenticarse un usuario OAuth.
+- Si un grupo recibido de GitLab no existe en la aplicación, se crea automáticamente.
+- La asignación de permisos sobre credenciales se realiza por grupos.
+
 Perfil de usuario (`/profile`):
 
 - Se muestran: `Nombre de usuario`, `Nombre completo`, `Email`.
@@ -195,4 +205,12 @@ docker compose up --build
 
 ```bash
 mvn test
+```
+
+## Nota sobre esquema local H2
+
+Si vienes de una versión anterior con un modelo distinto de grupos, elimina la base local persistida para recrear esquema limpio:
+
+```bash
+rm -f data/credvault.mv.db
 ```
