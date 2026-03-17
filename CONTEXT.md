@@ -113,6 +113,7 @@ Para considerar una tarea terminada:
 3. Sin lógica de negocio nueva en controladores.
 4. Sin exposición de secretos ni degradación de permisos.
 5. Documentación actualizada cuando cambie comportamiento relevante.
+6. Loggin de la funcionalidad para tener trazabilidad de todas las acciones que se realizan.
 
 ## 10. Evolución recomendada a medio plazo
 
