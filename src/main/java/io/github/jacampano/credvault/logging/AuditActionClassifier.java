@@ -12,8 +12,8 @@ public final class AuditActionClassifier {
         if (normalizedPath.startsWith("/credentials")) {
             return classifyCredentials(normalizedMethod, normalizedPath);
         }
-        if (normalizedPath.startsWith("/admin/teams")) {
-            return classifyAdminTeams(normalizedMethod, normalizedPath);
+        if (normalizedPath.startsWith("/admin/groups")) {
+            return classifyAdminGroups(normalizedMethod, normalizedPath);
         }
         if (normalizedPath.startsWith("/admin/users")) {
             return classifyAdminUsers(normalizedMethod, normalizedPath);
@@ -77,6 +77,9 @@ public final class AuditActionClassifier {
         if ("GET".equals(method) && path.matches("^/credentials/\\d+/history$")) {
             return new AuditRoute("credentials", "view_credential_history");
         }
+        if ("POST".equals(method) && path.matches("^/credentials/\\d+/copy$")) {
+            return new AuditRoute("credentials", "copy_credential_value");
+        }
         return new AuditRoute("credentials", "access_credentials");
     }
 
@@ -105,26 +108,26 @@ public final class AuditActionClassifier {
         return new AuditRoute("admin/users", "access_user_management");
     }
 
-    private static AuditRoute classifyAdminTeams(String method, String path) {
-        if ("GET".equals(method) && "/admin/teams".equals(path)) {
-            return new AuditRoute("admin/teams", "list_teams");
+    private static AuditRoute classifyAdminGroups(String method, String path) {
+        if ("GET".equals(method) && "/admin/groups".equals(path)) {
+            return new AuditRoute("admin/groups", "list_groups");
         }
-        if ("GET".equals(method) && "/admin/teams/new".equals(path)) {
-            return new AuditRoute("admin/teams", "open_create_team");
+        if ("GET".equals(method) && "/admin/groups/new".equals(path)) {
+            return new AuditRoute("admin/groups", "open_create_group");
         }
-        if ("POST".equals(method) && "/admin/teams".equals(path)) {
-            return new AuditRoute("admin/teams", "create_team");
+        if ("POST".equals(method) && "/admin/groups".equals(path)) {
+            return new AuditRoute("admin/groups", "create_group");
         }
-        if ("GET".equals(method) && path.matches("^/admin/teams/\\d+/edit$")) {
-            return new AuditRoute("admin/teams", "open_edit_team");
+        if ("GET".equals(method) && path.matches("^/admin/groups/\\d+/edit$")) {
+            return new AuditRoute("admin/groups", "open_edit_group");
         }
-        if ("POST".equals(method) && path.matches("^/admin/teams/\\d+$")) {
-            return new AuditRoute("admin/teams", "update_team");
+        if ("POST".equals(method) && path.matches("^/admin/groups/\\d+$")) {
+            return new AuditRoute("admin/groups", "update_group");
         }
-        if ("POST".equals(method) && path.matches("^/admin/teams/\\d+/delete$")) {
-            return new AuditRoute("admin/teams", "delete_team");
+        if ("POST".equals(method) && path.matches("^/admin/groups/\\d+/delete$")) {
+            return new AuditRoute("admin/groups", "delete_group");
         }
-        return new AuditRoute("admin/teams", "access_team_management");
+        return new AuditRoute("admin/groups", "access_group_management");
     }
 
     private static AuditRoute classifyAdminTrash(String method, String path) {

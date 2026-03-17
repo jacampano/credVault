@@ -44,7 +44,7 @@
                 <tr>
                     <th>Identificador</th>
                     <th>Tipo</th>
-                    <th>Equipos</th>
+                    <th>Grupos</th>
                     <th>Eliminada por</th>
                     <th>Fecha eliminación</th>
                     <th class="text-end">Acciones</th>
@@ -57,7 +57,7 @@
                 <tr th:each="credential : ${deletedCredentials}">
                     <td class="fw-semibold" th:text="${credential.identifier}"></td>
                     <td th:text="${credential.type}"></td>
-                    <td th:text="${#strings.arrayJoin(credential.teams.toArray(), ', ')}"></td>
+                    <td th:text="${#strings.arrayJoin(credential.groups.toArray(), ', ')}"></td>
                     <td th:text="${credential.deletedBy}"></td>
                     <td th:text="${credential.deletedAt != null ? #temporals.format(credential.deletedAt, 'dd/MM/yyyy HH:mm') : '-'}"></td>
                     <td class="text-end">

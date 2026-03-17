@@ -51,8 +51,8 @@ class CredentialWebControllerTest {
     @Test
     void listLoadsVisibleCredentialsForUser() {
         when(authentication.getName()).thenReturn("ana");
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
         when(credentialService.findAvailableComponents()).thenReturn(List.of());
         when(credentialService.findAvailableEnvironments()).thenReturn(List.of());
         when(credentialService.supportedTypes()).thenReturn(List.of(CredentialType.WEB_USER_PASSWORD, CredentialType.TOKEN));
@@ -70,8 +70,8 @@ class CredentialWebControllerTest {
     @Test
     void listSortsByIdentifierAscending() {
         when(authentication.getName()).thenReturn("ana");
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
         when(credentialService.findAvailableComponents()).thenReturn(List.of());
         when(credentialService.findAvailableEnvironments()).thenReturn(List.of());
         when(credentialService.supportedTypes()).thenReturn(List.of(CredentialType.WEB_USER_PASSWORD, CredentialType.TOKEN));
@@ -94,8 +94,8 @@ class CredentialWebControllerTest {
     @Test
     void listAppliesMultiFilters() {
         when(authentication.getName()).thenReturn("ana");
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS", "SECOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS", "SECOPS"))).thenReturn(Set.of("DEVOPS", "SECOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS", "SECOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS", "SECOPS"))).thenReturn(Set.of("DEVOPS", "SECOPS"));
         when(credentialService.supportedTypes()).thenReturn(List.of(CredentialType.WEB_USER_PASSWORD, CredentialType.TOKEN));
 
         InformationSystem erp = new InformationSystem();
@@ -120,7 +120,7 @@ class CredentialWebControllerTest {
         match.setInformationComponent(api);
         match.setEnvironment(pro);
         match.setType(CredentialType.TOKEN);
-        match.setTeams(Set.of("DEVOPS"));
+        match.setGroups(Set.of("DEVOPS"));
         match.setShared(true);
 
         Credential filteredOut = new Credential();
@@ -128,7 +128,7 @@ class CredentialWebControllerTest {
         filteredOut.setInformationComponent(backoffice);
         filteredOut.setEnvironment(pre);
         filteredOut.setType(CredentialType.WEB_USER_PASSWORD);
-        filteredOut.setTeams(Set.of("SECOPS"));
+        filteredOut.setGroups(Set.of("SECOPS"));
         filteredOut.setShared(false);
 
         when(credentialService.findAllVisibleForUser("ana", Set.of("DEVOPS", "SECOPS")))
@@ -159,8 +159,8 @@ class CredentialWebControllerTest {
     @Test
     void listAppliesIdentifierSearchFilter() {
         when(authentication.getName()).thenReturn("ana");
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
         when(credentialService.findAvailableComponents()).thenReturn(List.of());
         when(credentialService.findAvailableEnvironments()).thenReturn(List.of());
         when(credentialService.supportedTypes()).thenReturn(List.of(CredentialType.WEB_USER_PASSWORD, CredentialType.TOKEN));
@@ -194,12 +194,12 @@ class CredentialWebControllerTest {
     }
 
     @Test
-    void createAllowsPrivateCredentialWithoutTeams() {
+    void createAllowsPrivateCredentialWithoutGroups() {
         when(authentication.getName()).thenReturn("ana");
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
         CredentialForm form = validWebForm();
-        form.setSelectedTeams(Set.of());
+        form.setSelectedGroups(Set.of());
         BindingResult binding = new BeanPropertyBindingResult(form, "form");
         RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
         Model model = new ExtendedModelMap();
@@ -211,12 +211,12 @@ class CredentialWebControllerTest {
     }
 
     @Test
-    void createRejectsTeamOutsideUserMembership() {
+    void createRejectsGroupOutsideUserMembership() {
         when(authentication.getName()).thenReturn("ana");
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
         CredentialForm form = validWebForm();
-        form.setSelectedTeams(Set.of("SECOPS"));
+        form.setSelectedGroups(Set.of("SECOPS"));
         BindingResult binding = new BeanPropertyBindingResult(form, "form");
         RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
         Model model = new ExtendedModelMap();
@@ -224,7 +224,7 @@ class CredentialWebControllerTest {
         String view = credentialWebController.create(form, authentication, binding, redirect, model);
 
         assertThat(view).isEqualTo("credentials/form");
-        assertThat(binding.hasFieldErrors("selectedTeams")).isTrue();
+        assertThat(binding.hasFieldErrors("selectedGroups")).isTrue();
         verify(credentialService, never()).create(form, "ana");
     }
 
@@ -233,13 +233,13 @@ class CredentialWebControllerTest {
         when(authentication.getName()).thenReturn("ana");
         Collection<? extends GrantedAuthority> authorities = Set.of(new SimpleGrantedAuthority("ROLE_APP_USER"));
         doReturn(authorities).when(authentication).getAuthorities();
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
         Credential credential = new Credential();
         credential.setCreatedBy("otro");
         when(credentialService.findByIdVisibleForUser(9L, "ana", Set.of("DEVOPS"))).thenReturn(credential);
         CredentialForm form = validWebForm();
-        form.setSelectedTeams(Set.of("DEVOPS"));
+        form.setSelectedGroups(Set.of("DEVOPS"));
         BindingResult binding = new BeanPropertyBindingResult(form, "form");
         RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
         Model model = new ExtendedModelMap();
@@ -253,8 +253,8 @@ class CredentialWebControllerTest {
     @Test
     void createCallsServiceWithTokenTypeForm() {
         when(authentication.getName()).thenReturn("ana");
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
         CredentialForm form = new CredentialForm();
         form.setIdentifier("api-token");
         form.setCreatedBy("ana");
@@ -263,7 +263,7 @@ class CredentialWebControllerTest {
         form.setTokenNoExpiry(true);
         form.setComponentId(1L);
         form.setEnvironmentId(1L);
-        form.setSelectedTeams(Set.of("DEVOPS"));
+        form.setSelectedGroups(Set.of("DEVOPS"));
         BindingResult binding = new BeanPropertyBindingResult(form, "form");
         RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
         Model model = new ExtendedModelMap();
@@ -281,8 +281,8 @@ class CredentialWebControllerTest {
         when(authentication.getName()).thenReturn("ana");
         Collection<? extends GrantedAuthority> authorities = Set.of(new SimpleGrantedAuthority("ROLE_APP_USER"));
         doReturn(authorities).when(authentication).getAuthorities();
-        when(userAccessService.getTeamsForUser("ana")).thenReturn(Set.of("DEVOPS"));
-        when(credentialService.normalizeTeams(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
         Credential credential = new Credential();
         credential.setCreatedBy("ana");
         when(credentialService.findByIdVisibleForUser(7L, "ana", Set.of("DEVOPS"))).thenReturn(credential);
@@ -293,6 +293,31 @@ class CredentialWebControllerTest {
         assertThat(view).isEqualTo("redirect:/credentials");
         verify(credentialService).delete(7L, "ana");
         assertThat(redirect.getFlashAttributes().get("message")).isEqualTo("Credencial enviada a la papelera");
+    }
+
+    @Test
+    void auditCopyActionReturnsNoContentWhenCredentialIsVisible() {
+        when(authentication.getName()).thenReturn("ana");
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.findByIdVisibleForUser(7L, "ana", Set.of("DEVOPS"))).thenReturn(new Credential());
+
+        var response = credentialWebController.auditCopyAction(7L, authentication);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(204);
+    }
+
+    @Test
+    void auditCopyActionReturnsNotFoundWhenCredentialIsNotVisible() {
+        when(authentication.getName()).thenReturn("ana");
+        when(userAccessService.getGroupsForUser("ana")).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.normalizeGroups(Set.of("DEVOPS"))).thenReturn(Set.of("DEVOPS"));
+        when(credentialService.findByIdVisibleForUser(7L, "ana", Set.of("DEVOPS")))
+                .thenThrow(new jakarta.persistence.EntityNotFoundException("missing"));
+
+        var response = credentialWebController.auditCopyAction(7L, authentication);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
     }
 
     private CredentialForm validWebForm() {

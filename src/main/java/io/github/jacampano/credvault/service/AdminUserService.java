@@ -2,9 +2,10 @@ package io.github.jacampano.credvault.service;
 
 import io.github.jacampano.credvault.domain.auth.AppRole;
 import io.github.jacampano.credvault.domain.auth.AppUser;
+import io.github.jacampano.credvault.domain.auth.UserIdentitySource;
 import io.github.jacampano.credvault.dto.admin.UserAdminForm;
 import io.github.jacampano.credvault.repository.auth.AppUserRepository;
-import io.github.jacampano.credvault.repository.auth.TeamRepository;
+import io.github.jacampano.credvault.repository.auth.GroupRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,14 +23,14 @@ import java.util.LinkedHashSet;
 public class AdminUserService {
 
     private final AppUserRepository appUserRepository;
-    private final TeamRepository teamRepository;
+    private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AdminUserService(AppUserRepository appUserRepository,
-                            TeamRepository teamRepository,
+                            GroupRepository groupRepository,
                             PasswordEncoder passwordEncoder) {
         this.appUserRepository = appUserRepository;
-        this.teamRepository = teamRepository;
+        this.groupRepository = groupRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -60,7 +61,7 @@ public class AdminUserService {
         form.setEnabled(user.isEnabled());
         form.setAppUserRole(user.getRoles().contains(AppRole.APP_USER));
         form.setAdminRole(user.getRoles().contains(AppRole.ADMIN));
-        form.setSelectedTeams(new LinkedHashSet<>(user.getTeams()));
+        form.setSelectedGroups(new LinkedHashSet<>(user.getGroups()));
         return form;
     }
 
@@ -82,11 +83,11 @@ public class AdminUserService {
         if (roles.isEmpty()) {
             throw new IllegalArgumentException("El usuario debe tener al menos un rol");
         }
-        Set<String> teams = normalizeTeams(form.getSelectedTeams());
-        if (teams.isEmpty()) {
-            throw new IllegalArgumentException("El usuario debe pertenecer al menos a un equipo");
+        Set<String> groups = normalizeGroups(form.getSelectedGroups());
+        if (groups.isEmpty()) {
+            throw new IllegalArgumentException("El usuario debe pertenecer al menos a un grupo");
         }
-        validateTeamsExist(teams);
+        validateGroupsExist(groups);
         if (!StringUtils.hasText(form.getNewPassword())) {
             throw new IllegalArgumentException("La contraseña es obligatoria para crear el usuario");
         }
@@ -98,7 +99,8 @@ public class AdminUserService {
         user.setEmail(trimToNull(form.getEmail()));
         user.setEnabled(form.isEnabled());
         user.setRoles(roles);
-        user.setTeams(teams);
+        user.setGroups(groups);
+        user.setIdentitySource(UserIdentitySource.LOCAL);
         user.setPasswordHash(passwordEncoder.encode(form.getNewPassword().trim()));
         appUserRepository.save(user);
     }
@@ -106,6 +108,7 @@ public class AdminUserService {
     @Transactional
     public void updateUser(Long userId, UserAdminForm form, String actorUsername) {
         AppUser user = findById(userId);
+        ensureLocalUserManagement(user);
 
         String username = form.getUsername().trim();
         if (appUserRepository.existsByUsernameAndIdNot(username, userId)) {
@@ -123,11 +126,11 @@ public class AdminUserService {
         if (roles.isEmpty()) {
             throw new IllegalArgumentException("El usuario debe tener al menos un rol");
         }
-        Set<String> teams = normalizeTeams(form.getSelectedTeams());
-        if (teams.isEmpty()) {
-            throw new IllegalArgumentException("El usuario debe pertenecer al menos a un equipo");
+        Set<String> groups = normalizeGroups(form.getSelectedGroups());
+        if (groups.isEmpty()) {
+            throw new IllegalArgumentException("El usuario debe pertenecer al menos a un grupo");
         }
-        validateTeamsExist(teams);
+        validateGroupsExist(groups);
 
         if (isLastAdminBeingDemoted(user, roles)) {
             throw new IllegalArgumentException("No puedes quitar el rol ADMIN al último administrador");
@@ -142,7 +145,7 @@ public class AdminUserService {
         user.setEmail(trimToNull(form.getEmail()));
         user.setEnabled(form.isEnabled());
         user.setRoles(roles);
-        user.setTeams(teams);
+        user.setGroups(groups);
 
         if (StringUtils.hasText(form.getNewPassword())) {
             user.setPasswordHash(passwordEncoder.encode(form.getNewPassword().trim()));
@@ -154,6 +157,7 @@ public class AdminUserService {
     @Transactional
     public void toggleUserStatus(Long userId, String actorUsername) {
         AppUser user = findById(userId);
+        ensureLocalUserManagement(user);
         boolean targetEnabled = !user.isEnabled();
 
         if (!targetEnabled && sameUsername(user.getUsername(), actorUsername)) {
@@ -171,6 +175,7 @@ public class AdminUserService {
     @Transactional
     public void deleteUser(Long userId, String actorUsername) {
         AppUser user = findById(userId);
+        ensureLocalUserManagement(user);
 
         if (sameUsername(user.getUsername(), actorUsername)) {
             throw new IllegalArgumentException("No puedes eliminar tu propio usuario");
@@ -210,25 +215,31 @@ public class AdminUserService {
         return StringUtils.hasText(value) ? value.trim() : null;
     }
 
-    private Set<String> normalizeTeams(Set<String> selectedTeams) {
-        if (selectedTeams == null || selectedTeams.isEmpty()) {
+    private void ensureLocalUserManagement(AppUser user) {
+        if (user.isExternallyManaged()) {
+            throw new IllegalArgumentException("No puedes modificar un usuario gestionado por " + user.getIdentitySourceLabel());
+        }
+    }
+
+    private Set<String> normalizeGroups(Set<String> selectedGroups) {
+        if (selectedGroups == null || selectedGroups.isEmpty()) {
             return Set.of();
         }
-        return selectedTeams.stream()
+        return selectedGroups.stream()
                 .map(String::trim)
                 .filter(StringUtils::hasText)
                 .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
     }
 
-    private void validateTeamsExist(Set<String> teams) {
-        Set<String> availableTeams = teamRepository.findAllByOrderByNameAsc().stream()
-                .map(team -> team.getName().toLowerCase(Locale.ROOT))
+    private void validateGroupsExist(Set<String> groups) {
+        Set<String> availableGroups = groupRepository.findAllByOrderByNameAsc().stream()
+                .map(group -> group.getName().toLowerCase(Locale.ROOT))
                 .collect(java.util.stream.Collectors.toSet());
-        boolean invalidTeamFound = teams.stream()
-                .map(team -> team.toLowerCase(Locale.ROOT))
-                .anyMatch(team -> !availableTeams.contains(team));
-        if (invalidTeamFound) {
-            throw new IllegalArgumentException("Hay equipos seleccionados que no existen");
+        boolean invalidGroupFound = groups.stream()
+                .map(group -> group.toLowerCase(Locale.ROOT))
+                .anyMatch(group -> !availableGroups.contains(group));
+        if (invalidGroupFound) {
+            throw new IllegalArgumentException("Hay grupos seleccionados que no existen");
         }
     }
 }

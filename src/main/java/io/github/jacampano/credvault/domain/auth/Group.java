@@ -8,8 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "teams")
-public class Team {
+@Table(name = "app_groups")
+public class Group {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +20,9 @@ public class Team {
 
     @Column(length = 255)
     private String description;
+
+    @Column(nullable = false)
+    private boolean oauthSynchronized = false;
 
     public Long getId() {
         return id;
@@ -43,5 +46,13 @@ public class Team {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public boolean isOauthSynchronized() {
+        return oauthSynchronized;
+    }
+
+    public void setOauthSynchronized(boolean oauthSynchronized) {
+        this.oauthSynchronized = oauthSynchronized;
     }
 }

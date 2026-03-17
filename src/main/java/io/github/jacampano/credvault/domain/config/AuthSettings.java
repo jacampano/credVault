@@ -62,7 +62,7 @@ public class AuthSettings {
     @Column(length = 1000)
     private String oauthRedirectUri;
 
-    @Column(name = "oauth_admin_users", length = 1000)
+    @Column(name = "oauth_admin_groups", length = 1000)
     private String oauthAdminGroups;
 
     @Column(nullable = false, updatable = false)

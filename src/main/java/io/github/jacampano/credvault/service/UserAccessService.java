@@ -15,9 +15,9 @@ public class UserAccessService {
         this.appUserRepository = appUserRepository;
     }
 
-    public Set<String> getTeamsForUser(String username) {
+    public Set<String> getGroupsForUser(String username) {
         return appUserRepository.findByUsername(username)
-                .map(user -> new LinkedHashSet<>(user.getTeams()))
+                .map(user -> new LinkedHashSet<>(user.getGroups()))
                 .orElseGet(LinkedHashSet::new);
     }
 }

@@ -67,7 +67,7 @@ class CredentialEncryptionIntegrationTest {
         credential.setInformationComponent(component);
         credential.setEnvironment(environment);
         credential.setType(CredentialType.WEB_USER_PASSWORD);
-        credential.setTeams(java.util.Set.of("devops"));
+        credential.setGroups(java.util.Set.of("devops"));
         credential.setShared(true);
         credential.setWebUsername("plain-user");
         credential.setWebPassword("plain-pass");

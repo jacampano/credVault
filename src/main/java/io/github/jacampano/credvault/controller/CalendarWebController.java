@@ -52,9 +52,9 @@ public class CalendarWebController {
                        Model model) {
         LocalDate today = LocalDate.now();
         YearMonth selectedMonth = resolveMonth(year, month, today);
-        Set<String> userTeams = credentialService.normalizeTeams(userAccessService.getTeamsForUser(authentication.getName()));
+        Set<String> userGroups = credentialService.normalizeGroups(userAccessService.getGroupsForUser(authentication.getName()));
 
-        List<Credential> visibleCredentials = credentialService.findAllVisibleForUser(authentication.getName(), userTeams);
+        List<Credential> visibleCredentials = credentialService.findAllVisibleForUser(authentication.getName(), userGroups);
         List<CredentialExpiration> expirations = visibleCredentials.stream()
                 .filter(c -> c.getType() == CredentialType.TOKEN)
                 .filter(c -> !c.isTokenNoExpiry())

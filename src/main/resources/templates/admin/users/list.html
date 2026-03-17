@@ -61,7 +61,8 @@
                     <th><a class="app-link" th:href="@{/admin/users(q=${q},page=0,size=${size},sort='firstName',dir=${sort == 'firstName' ? reverseDir : 'asc'})}">Nombre</a></th>
                     <th><a class="app-link" th:href="@{/admin/users(q=${q},page=0,size=${size},sort='lastName',dir=${sort == 'lastName' ? reverseDir : 'asc'})}">Apellidos</a></th>
                     <th><a class="app-link" th:href="@{/admin/users(q=${q},page=0,size=${size},sort='email',dir=${sort == 'email' ? reverseDir : 'asc'})}">Email</a></th>
-                    <th>Equipos</th>
+                    <th>Origen</th>
+                    <th>Grupos</th>
                     <th>Roles</th>
                     <th><a class="app-link" th:href="@{/admin/users(q=${q},page=0,size=${size},sort='enabled',dir=${sort == 'enabled' ? reverseDir : 'asc'})}">Estado</a></th>
                     <th class="text-end">Acciones</th>
@@ -69,7 +70,7 @@
                 </thead>
                 <tbody>
                 <tr th:if="${usersPage.empty}">
-                    <td colspan="8" class="text-center py-4">No hay usuarios para mostrar</td>
+                    <td colspan="9" class="text-center py-4">No hay usuarios para mostrar</td>
                 </tr>
                 <tr th:each="user : ${usersPage.content}">
                     <td class="fw-semibold" th:text="${user.username}"></td>
@@ -77,7 +78,11 @@
                     <td th:text="${user.lastName}"></td>
                     <td th:text="${user.email}"></td>
                     <td>
-                        <span class="badge bg-light text-dark me-1" th:each="team : ${user.teams}" th:text="${team}"></span>
+                        <span class="badge bg-info-subtle text-info-emphasis" th:if="${user.externallyManaged}" th:text="${user.identitySourceLabel}"></span>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis" th:if="${!user.externallyManaged}">LOCAL</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark me-1" th:each="group : ${user.groups}" th:text="${group}"></span>
                     </td>
                     <td>
                         <span class="badge bg-secondary me-1" th:each="r : ${user.roles}" th:text="${r}"></span>
@@ -86,7 +91,7 @@
                         <span class="badge" th:classappend="${user.enabled} ? 'bg-success' : 'bg-secondary'"
                               th:text="${user.enabled} ? 'Activo' : 'Inactivo'"></span>
                     </td>
-                    <td class="text-end">
+                    <td class="text-end" th:if="${!user.externallyManaged}">
                         <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/users/{id}/edit(id=${user.id})}">Editar</a>
                         <form class="d-inline" th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" method="post">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
@@ -98,6 +103,7 @@
                             <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar usuario</button>
                         </form>
                     </td>
+                    <td class="text-end text-muted small" th:if="${user.externallyManaged}" th:text="|Bloqueado por ${user.identitySourceLabel}|"></td>
                 </tr>
                 </tbody>
             </table>

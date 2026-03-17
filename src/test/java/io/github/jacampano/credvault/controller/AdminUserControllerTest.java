@@ -2,13 +2,14 @@ package io.github.jacampano.credvault.controller;
 
 import io.github.jacampano.credvault.domain.auth.AppRole;
 import io.github.jacampano.credvault.domain.auth.AppUser;
+import io.github.jacampano.credvault.domain.auth.UserIdentitySource;
 import io.github.jacampano.credvault.dto.admin.UserAdminForm;
 import io.github.jacampano.credvault.security.AuthMode;
 import io.github.jacampano.credvault.security.AuthSettingsService;
 import io.github.jacampano.credvault.security.EffectiveAuthSettings;
 import io.github.jacampano.credvault.security.OAuthClientAuthenticationMethod;
 import io.github.jacampano.credvault.security.OAuthProvider;
-import io.github.jacampano.credvault.service.AdminTeamService;
+import io.github.jacampano.credvault.service.AdminGroupService;
 import io.github.jacampano.credvault.service.AdminUserService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,7 +50,7 @@ class AdminUserControllerTest {
     private AuthSettingsService authSettingsService;
 
     @Mock
-    private AdminTeamService adminTeamService;
+    private AdminGroupService adminGroupService;
 
     @Mock
     private Authentication authentication;
@@ -59,7 +61,7 @@ class AdminUserControllerTest {
     @BeforeEach
     void setUp() {
         lenient().when(authSettingsService.loadEffectiveSettings()).thenReturn(localSettings());
-        lenient().when(adminTeamService.findAllTeamNames()).thenReturn(Set.of("TEAM1", "TEAM2"));
+        lenient().when(adminGroupService.findAllGroupNames()).thenReturn(Set.of("TEAM1", "TEAM2"));
     }
 
     @Test
@@ -179,6 +181,18 @@ class AdminUserControllerTest {
     }
 
     @Test
+    void deleteUserRedirectsInOauthMode() {
+        RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
+        when(authentication.getName()).thenReturn("admin");
+
+        String view = adminUserController.deleteUser(10L, authentication, redirect);
+
+        assertThat(view).isEqualTo("redirect:/admin/users");
+        assertThat(redirect.getFlashAttributes()).containsKey("message");
+        verify(adminUserService).deleteUser(10L, "admin");
+    }
+
+    @Test
     void editUserLoadsFormWhenExists() {
         AppUser user = new AppUser();
         user.setId(5L);
@@ -199,6 +213,24 @@ class AdminUserControllerTest {
         assertThat(view).isEqualTo("admin/users/edit");
         assertThat(model.getAttribute("form")).isEqualTo(form);
         assertThat(model.getAttribute("userId")).isEqualTo(5L);
+    }
+
+    @Test
+    void editUserRedirectsWhenExternallyManaged() {
+        AppUser user = new AppUser();
+        user.setId(5L);
+        user.setUsername("oauth.user");
+        user.setIdentitySource(UserIdentitySource.OAUTH);
+        when(adminUserService.findById(5L)).thenReturn(user);
+
+        Model model = new ExtendedModelMap();
+        RedirectAttributesModelMap redirect = new RedirectAttributesModelMap();
+
+        String view = adminUserController.editUser(5L, model, redirect);
+
+        assertThat(view).isEqualTo("redirect:/admin/users");
+        assertThat(redirect.getFlashAttributes()).containsKey("error");
+        verify(adminUserService, never()).toForm(any());
     }
 
     @Test
